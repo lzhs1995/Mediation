@@ -1,0 +1,524 @@
+Mplus VERSION 8.11
+MUTHEN & MUTHEN
+05/08/2025   8:52 PM
+
+INPUT INSTRUCTIONS
+
+
+
+  TITLE:
+  Mediation_edun3-incc-dw1-eco_simple_slope_mfocal
+  DATA:
+  FILE = "modmed.ct2.dat";
+
+  VARIABLE:
+  NAMES = cid clo eco hg op op5 age1 edu1 siops1 incc1 hw1 agen agen1 agen2 agen3 edun
+       edun1 edun2 edun3 siopsn sipn1 sipn2 sipn3 age edu siops incc hw child eacc
+       eaccc hacc haccc dw1 dw11 dw12 dw13 dw1g1 dw1g3 ag ag1 ag2 ag3 agg1 agg3 agc
+       sib sib1 sib2 sib3 sibg1 sibg3 dw1f dw1m agcf agcm sibf sibm sibf1 sibf2 sibf3
+       sibfg1 sibfg3 sibm1 sibm2 sibm3 sibmg1 sibmg3 hk hk1 hk2 hk3 hkg1 hkg3 prtage
+       prtage1 prtage2 prtage3 prtageg1 prtageg3 prtsex prtmar prtmar1 prtmar2 prtmar3
+       prtmarg1 prtmarg3 prtedu prtedu1 prtedu2 prtedu3 prtedug1 prtedug3 prthk prthk1
+       prthk2 prthk3 prthkg1 prthkg3 prtcor prtcor1 prtcor2 prtcor3 prtcorg1 prtcorg3
+       prtpt prtpt1 prtpt2 prtpt3 prtptg1 prtptg3 prtcdn prtcdn1 prtcdn2 prtcdn3
+       prtcdng1 prtcdng3 fincc urban prov prov1 prov2 prov3 provg1 provg3 hwc hwc1
+       hwc2 hwc3 hwcg1 hwcg3 jobc jobc1 jobc2 jobc3 jobcg1 jobcg3 fcz fcz1 fcz2 fcz3
+       fczg1 fczg3 resp resp1 resp2 resp3 respg1 respg3 year year1 year2 year3
+       lifetime age_ct edu_ct siops_ct incc_ct hw_ct child_ct agc_ct agcf_ct agcm_ct
+       fincc_ct;
+  MISSING=.;
+
+
+  ! Predictor variable - agen3 edun3 sipn3
+  ! Mediator variable(s) - incc_ct hw_ct
+  ! Moderator variable(s) - child_ct dw1g1 dw1g3 agc_ct sibg1 sibg3
+  ! Moderator variable(s) - dw1f dw1m agcf_ct agcm_ct sibfg1 sibfg3 sibmg1 sibmg3
+  ! Outcome variable - clo eco hg op5
+  ! Control variable
+  !! cpsn - hk1 hk3
+  !! cprt - prtage1 prtage3 prtmar1 prtmar3 prtedu1 prtedu3
+  !! cprt - prthk1 prthk3 prtcor1 prtcor3 prtpt1 prtpt3
+  !! cfml - fincc_ct urban prov1 prov3
+  !! ccfd - jobc1 jobc3 hwc1 hwc3 fcz1 fcz3 resp1 resp3 year2 year3 lifetime
+
+
+
+  USEVARIABLES =
+  eco
+  edun3
+  incn incedu
+  !int
+  ;
+
+  categorical = incn;
+
+
+  ! Create interaction terms
+  ! Note that they have to be placed at end of USEVARIABLES subcommand above
+  DEFINE:
+
+  incn = 0;
+  IF (incc_ct GT 0) THEN incn = 1;
+  incedu = incn * edun3;
+  !int = incn * dw13;
+  !int1 = incc_ct*dw1g1;
+  !int3 = incc_ct*dw1g3;
+
+  ANALYSIS:
+  starts = 10;
+  processors = 10;
+  estimator = ML;
+  bootstrap = 200;
+
+  ! In model statement name each path and intercept using parentheses
+  MODEL:
+
+  !!! Outcomes var on mediators + IVs
+  [eco] (b0);  !!! Interception of Y
+  eco ON incn (b1);  !!! M main effect
+  eco ON edun3 (b2);  !!! X main effect
+  !eco ON dw13 (b3);
+  eco ON incedu (b3);
+  !eco ON int (b5);
+
+  !!! Mediator on IVs
+  [incn$1] (a0);  !!! Interception of M
+  incn ON edun3 (a1);  !!! X main effect
+
+
+  !Y on b0+b1X+b2M+b3XM
+
+
+  Model Indirect:
+  ! one indirect path: X-M-Y
+  eco MOD incn incedu edun3;
+  !op MOD incc1 childn(-3 3 1) MV edu1;
+
+
+
+  MODEL CONSTRAINT:
+    NEW(P_M0_X0 P_M1_X0 P_M0_X1 P_M1_X1);  ! P(M|X)
+    NEW(E_Y00 E_Y01 E_Y10 E_Y11);  ! E[Y|X,M]
+    NEW(E_Y0M0 E_Y0M1 E_Y1M0 E_Y1M1);  ! E[Y(x, M(x'))]
+    NEW(PNDE TNIE TE);  ! 因果效应
+
+    ! Step 1: 计算 P(M|X)
+    P_M1_X0 = 1 / (1 + EXP(-a0));  ! P(M=1|X=0)
+    P_M1_X1 = 1 / (1 + EXP(-(a0 + a1)));  ! P(M=1|X=1)
+    P_M0_X0 = 1 - P_M1_X0;  ! P(M=0|X=0)
+    P_M0_X1 = 1 - P_M1_X1;  ! P(M=0|X=1)
+
+    ! Step 2: 计算 E[Y|X,M]
+    E_Y00 = b0;  ! X=0, M=0
+    E_Y01 = b0 + b1;  ! X=0, M=1
+    E_Y10 = b0 + b2;  ! X=1, M=0
+    E_Y11 = b0 + b1 + b2 + b3;  ! X=1, M=1
+
+    ! Step 3: 计算四个期望值
+    E_Y0M0 = E_Y00 * P_M0_X0 + E_Y01 * P_M1_X0;  ! E[Y(0, M(0))]
+    E_Y0M1 = E_Y00 * P_M0_X1 + E_Y01 * P_M1_X1;  ! E[Y(0, M(1))]
+    E_Y1M0 = E_Y10 * P_M0_X0 + E_Y11 * P_M1_X0;  ! E[Y(1, M(0))]
+    E_Y1M1 = E_Y10 * P_M0_X1 + E_Y11 * P_M1_X1;  ! E[Y(1, M(1))]
+
+    ! Step 4: 计算因果效应
+    PNDE = E_Y1M0 - E_Y0M0;  ! 纯自然直接效应
+    TNIE = E_Y1M1 - E_Y1M0;  ! 总自然间接效应
+    !PNDE = (b1 + b3 * P_M0_X0) * (1 - P_M0_X0) + (b1 + b3 * P_M1_X0) * P_M0_X0;
+    !TNIE = (b2 + b3 * P_M1_X1) * (P_M1_X1 - P_M1_X0);
+
+    !PNDE = (b1 + b3 * (1 - (1 / (1 + EXP(-a0))))) * (1 - (1 - (1 / (1 + EXP(-a0)))))
+    !+ (b1 + b3 * (1 / (1 + EXP(-a0)))) * (1 - (1 / (1 + EXP(-a0))));
+
+    !TNIE = (b2 + b3 * (1 / (1 + EXP(-(a0 + a1)))))
+    ! ((1 / (1 + EXP(-(a0 + a1)))) - (1 / (1 + EXP(-a0))));
+    TE = PNDE + TNIE;  ! 总效应
+
+
+
+  PLOT:
+  Type = plot3; !!! shows scatter plots and histograms (e.g., residuals)
+  !Outliers = loglikelihood influence cooks;
+  ! identifying potential outliers and influential observations
+
+  OUTPUT:
+  sampstat residual stdyx MODINDICES CINTERVAL(bcbootstrap);
+  ! bias-corrected bootstrap confidence intervals; With frequentist estimation,
+  ! only SYMMETRIC confidence intervals are available for standardized parameter estimates.
+
+
+
+
+
+*** WARNING in OUTPUT command
+  STANDARDIZED (STD, STDY, STDYX) options are not available for analysis with
+  the MOD statement in MODEL INDIRECT.
+  Request for STANDARDIZED (STD, STDY, STDYX) is ignored.
+*** WARNING in OUTPUT command
+  MODINDICES option is not available for ALGORITHM=INTEGRATION.
+  Request for MODINDICES is ignored.
+   2 WARNING(S) FOUND IN THE INPUT INSTRUCTIONS
+
+
+
+
+Mediation_edun3-incc-dw1-eco_simple_slope_mfocal
+
+SUMMARY OF ANALYSIS
+
+Number of groups                                                 1
+Number of observations                                        7187
+
+Number of dependent variables                                    2
+Number of independent variables                                  2
+Number of continuous latent variables                            0
+
+Observed dependent variables
+
+  Continuous
+   ECO
+
+  Binary and ordered categorical (ordinal)
+   INCN
+
+Observed independent variables
+   EDUN3       INCEDU
+
+
+Estimator                                                       ML
+Information matrix                                        OBSERVED
+Optimization Specifications for the Quasi-Newton Algorithm for
+Continuous Outcomes
+  Maximum number of iterations                                 100
+  Convergence criterion                                  0.100D-05
+Optimization Specifications for the EM Algorithm
+  Maximum number of iterations                                 500
+  Convergence criteria
+    Loglikelihood change                                 0.100D-02
+    Relative loglikelihood change                        0.100D-05
+    Derivative                                           0.100D-02
+Optimization Specifications for the M step of the EM Algorithm for
+Categorical Latent variables
+  Number of M step iterations                                    1
+  M step convergence criterion                           0.100D-02
+  Basis for M step termination                           ITERATION
+Optimization Specifications for the M step of the EM Algorithm for
+Censored, Binary or Ordered Categorical (Ordinal), Unordered
+Categorical (Nominal) and Count Outcomes
+  Number of M step iterations                                    1
+  M step convergence criterion                           0.100D-02
+  Basis for M step termination                           ITERATION
+  Maximum value for logit thresholds                            15
+  Minimum value for logit thresholds                           -15
+  Minimum expected cell size for chi-square              0.100D-01
+Maximum number of iterations for H1                           2000
+Convergence criterion for H1                             0.100D-03
+Number of bootstrap draws
+    Requested                                                  200
+    Completed                                                  200
+Optimization algorithm                                         EMA
+Integration Specifications
+  Type                                                    STANDARD
+  Number of integration points                                  15
+  Dimensions of numerical integration                            0
+  Adaptive quadrature                                           ON
+Random Starts Specifications
+  Number of initial stage random starts                         10
+  Number of final stage optimizations                           10
+  Number of initial stage iterations                             1
+  Initial stage convergence criterion                    0.100D+01
+  Random starts scale                                    0.500D+01
+  Random seed for generating random starts                       0
+Link                                                         LOGIT
+Cholesky                                                       OFF
+
+Input data file(s)
+  modmed.ct2.dat
+Input data format  FREE
+
+
+SUMMARY OF DATA
+
+     Number of missing data patterns             1
+     Number of y missing data patterns           1
+     Number of u missing data patterns           1
+
+
+COVARIANCE COVERAGE OF DATA
+
+Minimum covariance coverage value   0.100
+
+
+     PROPORTION OF DATA PRESENT FOR Y
+
+
+           Covariance Coverage
+              ECO           EDUN3         INCEDU
+              ________      ________      ________
+ ECO            1.000
+ EDUN3          1.000         1.000
+ INCEDU         1.000         1.000         1.000
+
+
+UNIVARIATE PROPORTIONS AND COUNTS FOR CATEGORICAL VARIABLES
+
+    INCN
+      Category 1    0.843         6056.000
+      Category 2    0.157         1131.000
+
+
+SAMPLE STATISTICS
+
+
+     ESTIMATED SAMPLE STATISTICS
+
+
+           Means
+              ECO           EDUN3         INCEDU
+              ________      ________      ________
+                0.440         0.104         0.026
+
+
+           Covariances
+              ECO           EDUN3         INCEDU
+              ________      ________      ________
+ ECO            0.118
+ EDUN3          0.003         0.093
+ INCEDU         0.001         0.023         0.025
+
+
+           Correlations
+              ECO           EDUN3         INCEDU
+              ________      ________      ________
+ ECO            1.000
+ EDUN3          0.032         1.000
+ INCEDU         0.009         0.478         1.000
+
+
+     MAXIMUM LOG-LIKELIHOOD VALUE FOR THE UNRESTRICTED (H1) MODEL IS -183.281
+
+
+UNIVARIATE SAMPLE STATISTICS
+
+
+     UNIVARIATE HIGHER-ORDER MOMENT DESCRIPTIVE STATISTICS
+
+         Variable/         Mean/     Skewness/   Minimum/ % with                Percentiles
+        Sample Size      Variance    Kurtosis    Maximum  Min/Max      20%/60%    40%/80%    Median
+
+     ECO                   0.440       0.229       0.000   24.99%       0.000      0.429      0.500
+            7187.000       0.118      -0.985       1.000   17.14%       0.500      0.750
+     EDUN3                 0.104       2.601       0.000   89.63%       0.000      0.000      0.000
+            7187.000       0.093       4.763       1.000   10.37%       0.000      0.000
+     INCEDU                0.026       5.990       0.000   97.43%       0.000      0.000      0.000
+            7187.000       0.025      33.875       1.000    2.57%       0.000      0.000
+
+RANDOM STARTS RESULTS RANKED FROM THE BEST TO THE WORST LOGLIKELIHOOD VALUES
+
+Final stage loglikelihood values at local maxima, seeds, and initial stage start numbers:
+
+           -5594.976  462953           7
+           -5594.976  415931           10
+           -5594.976  93468            3
+           -5594.976  903420           5
+           -5594.976  127215           9
+           -5594.976  195873           6
+           -5594.976  253358           2
+           -5594.976  unperturbed      0
+           -5594.976  608496           4
+           -5594.976  939021           8
+
+
+
+THE MODEL ESTIMATION TERMINATED NORMALLY
+
+
+
+MODEL FIT INFORMATION
+
+Number of Free Parameters                        7
+
+Loglikelihood
+
+          H0 Value                       -5594.976
+
+Information Criteria
+
+          Akaike (AIC)                   11203.952
+          Bayesian (BIC)                 11252.112
+          Sample-Size Adjusted BIC       11229.867
+            (n* = (n + 2) / 24)
+
+
+
+MODEL RESULTS
+
+                                                    Two-Tailed
+                    Estimate       S.E.  Est./S.E.    P-Value
+
+ ECO        ON
+    INCN               0.061      0.013      4.729      0.000
+    EDUN3              0.049      0.015      3.362      0.001
+    INCEDU            -0.078      0.032     -2.405      0.016
+
+ INCN       ON
+    EDUN3              0.652      0.098      6.661      0.000
+
+ Intercepts
+    ECO                0.428      0.005     85.928      0.000
+
+ Thresholds
+    INCN$1             1.760      0.034     51.784      0.000
+
+ Residual Variances
+    ECO                0.117      0.001     80.774      0.000
+
+New/Additional Parameters
+    P_M0_X0            0.147      0.004     34.528      0.000
+    P_M1_X0            0.853      0.004    200.598      0.000
+    P_M0_X1            0.082      0.009      9.092      0.000
+    P_M1_X1            0.918      0.009    101.384      0.000
+    E_Y00              0.428      0.005     85.928      0.000
+    E_Y01              0.489      0.012     40.511      0.000
+    E_Y10              0.477      0.014     33.586      0.000
+    E_Y11              0.460      0.026     17.831      0.000
+    E_Y0M0             0.480      0.010     46.479      0.000
+    E_Y0M1             0.484      0.011     43.546      0.000
+    E_Y1M0             0.462      0.022     21.113      0.000
+    E_Y1M1             0.461      0.024     19.573      0.000
+    PNDE              -0.018      0.024     -0.729      0.466
+    TNIE              -0.001      0.002     -0.550      0.583
+    TE                -0.019      0.026     -0.729      0.466
+
+
+LOGISTIC REGRESSION ODDS RATIO RESULTS
+
+                                                95% C.I.
+                    Estimate       S.E.  Lower 2.5% Upper 2.5%
+
+ INCN       ON
+    EDUN3              1.919      0.188      1.565      2.263
+
+
+
+TOTAL, INDIRECT, AND DIRECT EFFECTS BASED ON COUNTERFACTUALS (CAUSALLY-DEFINED EFFECTS, CONDITIONAL ON ALL OTHER COVARIATES BEING ZERO)
+
+
+Effects from EDUN3 to ECO
+
+                                                    Two-Tailed
+                    Estimate       S.E.  Est./S.E.    P-Value
+
+  Tot natural IE      -0.002      0.003     -0.539      0.590
+  Pure natural DE      0.037      0.013      2.896      0.004
+  Total effect         0.036      0.013      2.851      0.004
+
+ Other effects
+
+  Pure natural IE      0.006      0.002      3.643      0.000
+  Tot natural DE       0.030      0.013      2.308      0.021
+  Total effect         0.036      0.013      2.851      0.004
+
+
+CONFIDENCE INTERVALS OF MODEL RESULTS
+
+                  Lower .5%  Lower 2.5%    Lower 5%    Estimate    Upper 5%  Upper 2.5%   Upper .5%
+
+ ECO      ON
+    INCN             0.028       0.037       0.041       0.061       0.082       0.084       0.092
+    EDUN3            0.005       0.018       0.024       0.049       0.072       0.076       0.079
+    INCEDU          -0.164      -0.145      -0.136      -0.078      -0.027      -0.022      -0.009
+
+ INCN     ON
+    EDUN3            0.300       0.448       0.486       0.652       0.802       0.816       0.853
+
+ Intercepts
+    ECO              0.415       0.415       0.416       0.428       0.434       0.436       0.438
+
+ Thresholds
+    INCN$1           1.679       1.699       1.709       1.760       1.819       1.828       1.840
+
+ Residual Variances
+    ECO              0.114       0.114       0.115       0.117       0.120       0.120       0.121
+
+New/Additional Parameters
+    P_M0_X0          0.136       0.138       0.139       0.147       0.153       0.154       0.156
+    P_M1_X0          0.843       0.845       0.847       0.853       0.860       0.862       0.863
+    P_M0_X1          0.065       0.067       0.069       0.082       0.096       0.100       0.109
+    P_M1_X1          0.883       0.897       0.903       0.918       0.931       0.933       0.934
+    E_Y00            0.415       0.415       0.416       0.428       0.434       0.436       0.438
+    E_Y01            0.458       0.464       0.467       0.489       0.507       0.514       0.518
+    E_Y10            0.432       0.450       0.454       0.477       0.502       0.504       0.509
+    E_Y11            0.372       0.411       0.416       0.460       0.494       0.510       0.514
+    E_Y0M0           0.454       0.459       0.463       0.480       0.497       0.502       0.504
+    E_Y0M1           0.456       0.461       0.464       0.484       0.501       0.506       0.510
+    E_Y1M0           0.390       0.418       0.426       0.462       0.492       0.503       0.508
+    E_Y1M1           0.382       0.417       0.421       0.461       0.493       0.506       0.511
+    PNDE            -0.079      -0.068      -0.062      -0.018       0.020       0.027       0.039
+    TNIE            -0.007      -0.005      -0.004      -0.001       0.002       0.002       0.003
+    TE              -0.084      -0.075      -0.066      -0.019       0.022       0.026       0.042
+
+
+CONFIDENCE INTERVALS FOR THE LOGISTIC REGRESSION ODDS RATIO RESULTS
+
+ INCN     ON
+    EDUN3            1.350       1.565       1.626       1.919       2.230       2.263       2.347
+
+
+
+CONFIDENCE INTERVALS OF TOTAL, INDIRECT, AND DIRECT EFFECTS BASED ON COUNTERFACTUALS (CAUSALLY-DEFINED EFFECTS)
+
+
+                  Lower .5%  Lower 2.5%    Lower 5%    Estimate    Upper 5%  Upper 2.5%   Upper .5%
+
+Effects from EDUN3 to ECO
+
+  Tot natural IE    -0.013      -0.008      -0.007      -0.002       0.003       0.004       0.004
+  Pure natural DE    0.001       0.012       0.016       0.037       0.057       0.059       0.067
+  Total effect       0.005       0.013       0.016       0.036       0.054       0.057       0.061
+
+ Other effects
+
+  Pure natural IE    0.002       0.003       0.004       0.006       0.009       0.010       0.011
+  Tot natural DE    -0.006       0.007       0.010       0.030       0.049       0.053       0.056
+  Total effect       0.005       0.013       0.016       0.036       0.054       0.057       0.061
+
+
+RESIDUAL OUTPUT
+
+
+     RESIDUAL OUTPUT IS NOT AVAILABLE FOR THIS MODEL.
+
+
+PLOT INFORMATION
+
+The following plots are available:
+
+  Histograms (sample values)
+  Scatterplots (sample values)
+  Sample proportions
+  Bootstrap distributions
+
+DIAGRAM INFORMATION
+
+  Use View Diagram under the Diagram menu in the Mplus Editor to view the diagram.
+  If running Mplus from the Mplus Diagrammer, the diagram opens automatically.
+
+  Diagram output
+    c:\users\lzhs\desktop\markdown_latex\rmarkdown\bookdown\test_bookdown_new\20230927 lta\interge_rela\result_mediation
+
+     Beginning Time:  20:52:50
+        Ending Time:  20:52:55
+       Elapsed Time:  00:00:05
+
+
+
+MUTHEN & MUTHEN
+3463 Stoner Ave.
+Los Angeles, CA  90066
+
+Tel: (310) 391-9971
+Fax: (310) 391-8971
+Web: www.StatModel.com
+Support: Support@StatModel.com
+
+Copyright (c) 1998-2024 Muthen & Muthen
