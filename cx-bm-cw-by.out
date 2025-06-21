@@ -1,0 +1,730 @@
+Mplus VERSION 8.11
+MUTHEN & MUTHEN
+06/21/2025   9:34 AM
+
+INPUT INSTRUCTIONS
+
+
+
+
+  TITLE:
+  Mediation_edun3-incc-dw1-eco_simple_slope_mfocal
+  DATA:
+  FILE = "modmed.ct2.dat";
+
+  VARIABLE:
+  NAMES = cid clo eco hg op op5 age1 edu1 siops1 incc1 hw1 agen agen1 agen2 agen3 edun
+       edun1 edun2 edun3 siopsn sipn1 sipn2 sipn3 age edu siops incc hw child eacc
+       eaccc hacc haccc dw1 dw11 dw12 dw13 dw1g1 dw1g3 ag ag1 ag2 ag3 agg1 agg3 agc
+       sib sib1 sib2 sib3 sibg1 sibg3 dw1f dw1m agcf agcm sibf sibm sibf1 sibf2 sibf3
+       sibfg1 sibfg3 sibm1 sibm2 sibm3 sibmg1 sibmg3 hk hk1 hk2 hk3 hkg1 hkg3 prtage
+       prtage1 prtage2 prtage3 prtageg1 prtageg3 prtsex prtmar prtmar1 prtmar2 prtmar3
+       prtmarg1 prtmarg3 prtedu prtedu1 prtedu2 prtedu3 prtedug1 prtedug3 prthk prthk1
+       prthk2 prthk3 prthkg1 prthkg3 prtcor prtcor1 prtcor2 prtcor3 prtcorg1 prtcorg3
+       prtpt prtpt1 prtpt2 prtpt3 prtptg1 prtptg3 prtcdn prtcdn1 prtcdn2 prtcdn3
+       prtcdng1 prtcdng3 fincc urban prov prov1 prov2 prov3 provg1 provg3 hwc hwc1
+       hwc2 hwc3 hwcg1 hwcg3 jobc jobc1 jobc2 jobc3 jobcg1 jobcg3 fcz fcz1 fcz2 fcz3
+       fczg1 fczg3 resp resp1 resp2 resp3 respg1 respg3 year year1 year2 year3
+       lifetime age_ct edu_ct siops_ct incc_ct hw_ct child_ct agc_ct agcf_ct agcm_ct
+       fincc_ct;
+  MISSING=.;
+  !categorical = incn;
+  categorical = incn econ;
+  USEVARIABLES =
+  !eco ! Outcome (Y): Continuous
+  edu_ct child_ct ! Exposure (X): Binary
+  incn econ int;
+  !incn ! Mediator (M): Binary
+  !incedu ; ! exposure-mediator interaction
+
+  DEFINE:
+  incn = 0;
+  IF (incc_ct GT 0) THEN incn = 1; ! Mediator (M): Binary
+
+  econ = 0;
+  IF (eco GT 0) THEN econ = 1; ! Outcome (Y): Binary
+
+  int = incn * child_ct;
+  !incedu = incn * edun3; ! Exposure-Mediator Interaction
+
+  ANALYSIS:
+  !starts = 10;
+  processors = 10;
+  estimator = ML;
+  bootstrap = 1000;
+
+  ! In model statement name each path and intercept using parentheses
+  MODEL:
+
+  !!! Outcomes var on mediators + IVs
+  ! Y on b0 + b1X + b2M + b3XM
+  [econ$1] (b0);  !!! Interception of Y
+  econ ON edu_ct (b1);  !!! X main effect
+  econ ON incn (b2);  !!! M main effect
+  econ ON int (b3); !!! Exposure-Mediator Interaction
+  econ ON child_ct;
+  !econ ON incedu (b3); !!! Exposure-Mediator Interaction
+
+  !!! Mediator on IVs
+  ! M on a0 + a1X
+  [incn$1] (a0);  !!! Interception of M
+  incn ON edu_ct (a1);  !!! X main effect
+
+
+  ! MOD command
+  Model Indirect:
+  !econ IND incn edun3;
+  econ MOD incn child_ct(-1,1,1) int edu_ct;
+  !eco MOD incn incedu edun3; ! Y on M MX X
+
+  !*
+  MODEL CONSTRAINT:
+    NEW(P_M0_X0 P_M1_X0 P_M0_X1 P_M1_X1);  ! P(M|X)
+    NEW(E_Y00 E_Y01 E_Y10 E_Y11);  ! E[Y|X,M]
+    NEW(E_Y0M0 E_Y0M1 E_Y1M0 E_Y1M1);  ! E[Y(x, M(x'))]
+    NEW(
+    TNIE PNDE TE PNIE TNDE
+    );  ! Effect decomposition
+
+    ! Step 1: P(M|X)
+    P_M1_X0 = 1 / (1 + EXP(a0));  ! P(M=1|X=0)
+    P_M1_X1 = 1 / (1 + EXP(a0 - a1));  ! P(M=1|X=1)
+    P_M0_X0 = 1 - P_M1_X0;  ! P(M=0|X=0)
+    P_M0_X1 = 1 - P_M1_X1;  ! P(M=0|X=1)
+
+    ! Step 2: Conditional expectations of Y given X and M:
+    E_Y00 = b0;                        ! E(Y|X=0, M=0)
+    E_Y01 = b0 + b2;                   ! E(Y|X=0, M=1)
+    E_Y10 = b0 + b1;                   ! E(Y|X=1, M=0)
+    E_Y11 = b0 + b1 + b2 + b3;         ! E(Y|X=1, M=1)
+
+    ! Step 3: Counterfactual expectations:
+    E_Y0M0 = (E_Y00 * P_M0_X0) + (E_Y01 * P_M1_X0);  ! E[Y(0, M(0))]
+    E_Y0M1 = (E_Y00 * P_M0_X1) + (E_Y01 * P_M1_X1);  ! E[Y(0, M(1))]
+    E_Y1M0 = (E_Y10 * P_M0_X0) + (E_Y11 * P_M1_X0);  ! E[Y(1, M(0))]
+    E_Y1M1 = (E_Y10 * P_M0_X1) + (E_Y11 * P_M1_X1);  ! E[Y(1, M(1))]
+
+    ! Step 4: Effect decomposition:
+    PNDE = E_Y1M0 - E_Y0M0;  ! Pure Natural Direct Effect
+    TNDE = E_Y1M1 - E_Y0M1;  ! Total Natural Direct Effect
+
+    PNIE = E_Y0M1 - E_Y0M0;  ! Pure Natural Indirect Effect
+    TNIE = E_Y1M1 - E_Y1M0;  ! Total Natural Indirect Effect
+
+
+    TE = E_Y1M1-E_Y0M0;
+    !TE = PNDE + TNIE;        ! Total Effect
+    !TE = TNDE + PNIE;        ! Total Effect
+    !TE =  PNDE + PNIE + (TNIE ? PNIE);        ! Total Effect
+    !TE =  PNDE + PNIE + (TNDE ? PNDE).        ! Total Effect
+  *!
+
+  OUTPUT:
+  tech1 tech4 tech8 tech10 tech11 tech15 sampstat residual stdyx CINTERVAL(bcbootstrap);
+  ! bias-corrected bootstrap confidence intervals; With frequentist estimation,
+  ! only SYMMETRIC confidence intervals are available for standardized parameter estimates.
+
+
+
+
+
+*** WARNING in OUTPUT command
+  STANDARDIZED (STD, STDY, STDYX) options are not available for analysis with
+  the MOD statement in MODEL INDIRECT.
+  Request for STANDARDIZED (STD, STDY, STDYX) is ignored.
+*** WARNING in OUTPUT command
+  TECH11 option is available only with TYPE=MIXTURE.
+  Request for TECH11 is ignored.
+*** WARNING in OUTPUT command
+  TECH15 option is only available for TYPE=MIXTURE.
+  Request for TECH15 will be ignored.
+   3 WARNING(S) FOUND IN THE INPUT INSTRUCTIONS
+
+
+
+
+Mediation_edun3-incc-dw1-eco_simple_slope_mfocal
+
+SUMMARY OF ANALYSIS
+
+Number of groups                                                 1
+Number of observations                                        7187
+
+Number of dependent variables                                    2
+Number of independent variables                                  3
+Number of continuous latent variables                            0
+
+Observed dependent variables
+
+  Binary and ordered categorical (ordinal)
+   INCN        ECON
+
+Observed independent variables
+   EDU_CT      CHILD_CT    INT
+
+
+Estimator                                                       ML
+Information matrix                                        OBSERVED
+Optimization Specifications for the Quasi-Newton Algorithm for
+Continuous Outcomes
+  Maximum number of iterations                                 100
+  Convergence criterion                                  0.100D-05
+Optimization Specifications for the EM Algorithm
+  Maximum number of iterations                                 500
+  Convergence criteria
+    Loglikelihood change                                 0.100D-02
+    Relative loglikelihood change                        0.100D-05
+    Derivative                                           0.100D-02
+Optimization Specifications for the M step of the EM Algorithm for
+Categorical Latent variables
+  Number of M step iterations                                    1
+  M step convergence criterion                           0.100D-02
+  Basis for M step termination                           ITERATION
+Optimization Specifications for the M step of the EM Algorithm for
+Censored, Binary or Ordered Categorical (Ordinal), Unordered
+Categorical (Nominal) and Count Outcomes
+  Number of M step iterations                                    1
+  M step convergence criterion                           0.100D-02
+  Basis for M step termination                           ITERATION
+  Maximum value for logit thresholds                            15
+  Minimum value for logit thresholds                           -15
+  Minimum expected cell size for chi-square              0.100D-01
+Maximum number of iterations for H1                           2000
+Convergence criterion for H1                             0.100D-03
+Number of bootstrap draws
+    Requested                                                 1000
+    Completed                                                 1000
+Optimization algorithm                                         EMA
+Integration Specifications
+  Type                                                    STANDARD
+  Number of integration points                                  15
+  Dimensions of numerical integration                            0
+  Adaptive quadrature                                           ON
+Link                                                         LOGIT
+Cholesky                                                       OFF
+
+Input data file(s)
+  modmed.ct2.dat
+Input data format  FREE
+
+
+SUMMARY OF DATA
+
+     Number of missing data patterns             1
+     Number of y missing data patterns           0
+     Number of u missing data patterns           1
+
+
+COVARIANCE COVERAGE OF DATA
+
+Minimum covariance coverage value   0.100
+
+
+UNIVARIATE PROPORTIONS AND COUNTS FOR CATEGORICAL VARIABLES
+
+    INCN
+      Category 1    0.843         6056.000
+      Category 2    0.157         1131.000
+    ECON
+      Category 1    0.250         1796.000
+      Category 2    0.750         5391.000
+
+
+SAMPLE STATISTICS
+
+
+     SAMPLE STATISTICS
+
+
+           Means
+              EDU_CT        CHILD_CT      INT
+              ________      ________      ________
+               -0.055         0.000        -0.025
+
+
+           Covariances
+              EDU_CT        CHILD_CT      INT
+              ________      ________      ________
+ EDU_CT         0.040
+ CHILD_CT      -0.020         0.610
+ INT           -0.004         0.090         0.090
+
+
+           Correlations
+              EDU_CT        CHILD_CT      INT
+              ________      ________      ________
+ EDU_CT         1.000
+ CHILD_CT      -0.125         1.000
+ INT           -0.067         0.386         1.000
+
+
+UNIVARIATE SAMPLE STATISTICS
+
+
+     UNIVARIATE HIGHER-ORDER MOMENT DESCRIPTIVE STATISTICS
+
+         Variable/         Mean/     Skewness/   Minimum/ % with                Percentiles
+        Sample Size      Variance    Kurtosis    Maximum  Min/Max      20%/60%    40%/80%    Median
+
+     EDU_CT               -0.055      -0.594      -0.500   12.47%      -0.100      0.000      0.000
+            7187.000       0.040       1.980       0.500    3.27%       0.000      0.000
+     CHILD_CT              0.000       1.135      -1.767    0.92%      -0.767      0.233      0.233
+            7187.000       0.610       3.495       5.233    0.06%       0.233      0.233
+     INT                  -0.025       1.810      -1.767    0.17%       0.000      0.000      0.000
+            7187.000       0.090      33.678       4.233    0.04%       0.000      0.000
+
+
+THE MODEL ESTIMATION TERMINATED NORMALLY
+
+
+
+MODEL FIT INFORMATION
+
+Number of Free Parameters                        7
+
+Loglikelihood
+
+          H0 Value                       -7114.728
+
+Information Criteria
+
+          Akaike (AIC)                   14243.456
+          Bayesian (BIC)                 14291.616
+          Sample-Size Adjusted BIC       14269.372
+            (n* = (n + 2) / 24)
+
+
+
+MODEL RESULTS
+
+                                                    Two-Tailed
+                    Estimate       S.E.  Est./S.E.    P-Value
+
+ ECON       ON
+    EDU_CT             0.295      0.137      2.148      0.032
+    INCN               0.146      0.081      1.808      0.071
+    INT               -0.102      0.100     -1.021      0.307
+    CHILD_CT          -0.167      0.036     -4.625      0.000
+
+ INCN       ON
+    EDU_CT             1.358      0.165      8.224      0.000
+
+ Thresholds
+    INCN$1             1.628      0.033     49.678      0.000
+    ECON$1            -1.098      0.031    -35.320      0.000
+
+
+LOGISTIC REGRESSION ODDS RATIO RESULTS
+
+                                                95% C.I.
+                    Estimate       S.E.  Lower 2.5% Upper 2.5%
+
+ ECON       ON
+    EDU_CT             1.343      0.184      1.020      1.736
+    INCN               1.157      0.093      0.983      1.349
+    INT                0.903      0.090      0.738      1.087
+    CHILD_CT           0.846      0.031      0.785      0.906
+
+ INCN       ON
+    EDU_CT             3.887      0.642      2.890      5.454
+
+
+
+TOTAL, INDIRECT, AND DIRECT EFFECTS BASED ON COUNTERFACTUALS (CAUSALLY-DEFINED EFFECTS, CONDITIONAL ON ALL OTHER COVARIATES BEING ZERO)
+
+
+Effects from EDU_CT to ECON for CHILD_CT = -1.000
+
+                                                    Two-Tailed
+                    Estimate       S.E.  Est./S.E.    P-Value
+
+  Tot natural IE       0.009      0.004      1.966      0.049
+  Pure natural DE      0.045      0.019      2.364      0.018
+  Total effect         0.054      0.019      2.898      0.004
+
+ Odds ratios for binary Y
+
+                                                95% C.I.
+                    Estimate       S.E.  Lower 2.5% Upper 2.5%
+
+  Tot natural IE       1.066      0.034      1.005      1.140
+  Pure natural DE      1.342      0.187      1.020      1.734
+  Total effect         1.432      0.203      1.090      1.866
+
+ Other effects
+
+                                                    Two-Tailed
+                    Estimate       S.E.  Est./S.E.    P-Value
+
+  Pure natural IE      0.011      0.005      2.019      0.043
+  Tot natural DE       0.043      0.018      2.364      0.018
+  Total effect         0.054      0.019      2.898      0.004
+
+ Odds ratios for other effects for binary Y
+
+                                                95% C.I.
+                    Estimate       S.E.  Lower 2.5% Upper 2.5%
+
+  Pure natural IE      1.067      0.035      1.005      1.141
+  Tot natural DE       1.342      0.187      1.021      1.732
+  Total effect         1.432      0.203      1.090      1.866
+
+Effects from EDU_CT to ECON for CHILD_CT = 0.000
+
+                                                    Two-Tailed
+                    Estimate       S.E.  Est./S.E.    P-Value
+
+  Tot natural IE       0.006      0.003      1.730      0.084
+  Pure natural DE      0.050      0.021      2.360      0.018
+  Total effect         0.056      0.021      2.686      0.007
+
+ Odds ratios for binary Y
+
+                                                95% C.I.
+                    Estimate       S.E.  Lower 2.5% Upper 2.5%
+
+  Tot natural IE       1.039      0.023      0.996      1.087
+  Pure natural DE      1.343      0.187      1.020      1.735
+  Total effect         1.395      0.195      1.052      1.827
+
+ Other effects
+
+                                                    Two-Tailed
+                    Estimate       S.E.  Est./S.E.    P-Value
+
+  Pure natural IE      0.007      0.004      1.772      0.076
+  Tot natural DE       0.049      0.021      2.360      0.018
+  Total effect         0.056      0.021      2.686      0.007
+
+ Odds ratios for other effects for binary Y
+
+                                                95% C.I.
+                    Estimate       S.E.  Lower 2.5% Upper 2.5%
+
+  Pure natural IE      1.039      0.023      0.996      1.087
+  Tot natural DE       1.343      0.187      1.020      1.734
+  Total effect         1.395      0.195      1.052      1.827
+
+Effects from EDU_CT to ECON for CHILD_CT = 1.000
+
+                                                    Two-Tailed
+                    Estimate       S.E.  Est./S.E.    P-Value
+
+  Tot natural IE       0.002      0.006      0.322      0.747
+  Pure natural DE      0.056      0.024      2.344      0.019
+  Total effect         0.058      0.024      2.368      0.018
+
+ Odds ratios for binary Y
+
+                                                95% C.I.
+                    Estimate       S.E.  Lower 2.5% Upper 2.5%
+
+  Tot natural IE       1.012      0.036      0.946      1.086
+  Pure natural DE      1.343      0.187      1.020      1.736
+  Total effect         1.359      0.194      1.007      1.778
+
+ Other effects
+
+                                                    Two-Tailed
+                    Estimate       S.E.  Est./S.E.    P-Value
+
+  Pure natural IE      0.002      0.007      0.325      0.745
+  Tot natural DE       0.055      0.024      2.339      0.019
+  Total effect         0.058      0.024      2.368      0.018
+
+ Odds ratios for other effects for binary Y
+
+                                                95% C.I.
+                    Estimate       S.E.  Lower 2.5% Upper 2.5%
+
+  Pure natural IE      1.012      0.037      0.947      1.086
+  Tot natural DE       1.343      0.187      1.020      1.736
+  Total effect         1.359      0.194      1.007      1.778
+
+
+CONFIDENCE INTERVALS OF MODEL RESULTS
+
+                  Lower .5%  Lower 2.5%    Lower 5%    Estimate    Upper 5%  Upper 2.5%   Upper .5%
+
+ ECON     ON
+    EDU_CT          -0.095       0.020       0.054       0.295       0.506       0.552       0.633
+    INCN            -0.065      -0.017       0.009       0.146       0.273       0.299       0.354
+    INT             -0.370      -0.304      -0.269      -0.102       0.056       0.083       0.129
+    CHILD_CT        -0.260      -0.242      -0.227      -0.167      -0.111      -0.099      -0.060
+
+ INCN     ON
+    EDU_CT           0.948       1.061       1.111       1.358       1.647       1.696       1.736
+
+ Thresholds
+    INCN$1           1.552       1.565       1.574       1.628       1.686       1.697       1.710
+    ECON$1          -1.177      -1.160      -1.147      -1.098      -1.043      -1.037      -1.020
+
+
+CONFIDENCE INTERVALS FOR THE LOGISTIC REGRESSION ODDS RATIO RESULTS
+
+ ECON     ON
+    EDU_CT           0.909       1.020       1.056       1.343       1.658       1.736       1.884
+    INCN             0.937       0.983       1.009       1.157       1.313       1.349       1.424
+    INT              0.691       0.738       0.764       0.903       1.058       1.087       1.138
+    CHILD_CT         0.771       0.785       0.797       0.846       0.895       0.906       0.941
+
+ INCN     ON
+    EDU_CT           2.582       2.890       3.037       3.887       5.194       5.454       5.674
+
+
+
+CONFIDENCE INTERVALS OF TOTAL, INDIRECT, AND DIRECT EFFECTS BASED ON COUNTERFACTUALS (CAUSALLY-DEFINED EFFECTS)
+
+
+                  Lower .5%  Lower 2.5%    Lower 5%    Estimate    Upper 5%  Upper 2.5%   Upper .5%
+
+Effects from EDU_CT to ECON for CHILD_CT = -1.000
+
+  Tot natural IE    -0.002       0.002       0.002       0.009       0.017       0.019       0.022
+  Pure natural DE   -0.016       0.004       0.009       0.045       0.073       0.078       0.091
+  Total effect       0.000       0.014       0.020       0.054       0.082       0.086       0.100
+
+ Odds ratios for binary Y
+
+  Tot natural IE     0.983       1.005       1.016       1.066       1.129       1.140       1.164
+  Pure natural DE    0.910       1.020       1.056       1.342       1.658       1.734       1.882
+  Total effect       0.999       1.090       1.131       1.432       1.782       1.866       2.091
+
+ Other effects
+
+  Pure natural IE   -0.003       0.001       0.003       0.011       0.020       0.021       0.025
+  Tot natural DE    -0.016       0.003       0.009       0.043       0.070       0.075       0.086
+  Total effect       0.000       0.014       0.020       0.054       0.082       0.086       0.100
+
+ Odds ratios for other effects for binary Y
+
+  Pure natural IE    0.983       1.005       1.017       1.067       1.129       1.141       1.166
+  Tot natural DE     0.910       1.021       1.055       1.342       1.658       1.732       1.881
+  Total effect       0.999       1.090       1.131       1.432       1.782       1.866       2.091
+
+Effects from EDU_CT to ECON for CHILD_CT = 0.000
+
+  Tot natural IE    -0.003       0.000       0.001       0.006       0.012       0.014       0.017
+  Pure natural DE   -0.018       0.004       0.010       0.050       0.082       0.087       0.100
+  Total effect      -0.011       0.010       0.019       0.056       0.088       0.094       0.107
+
+ Odds ratios for binary Y
+
+  Tot natural IE     0.985       0.996       1.003       1.039       1.076       1.087       1.107
+  Pure natural DE    0.909       1.020       1.056       1.343       1.658       1.735       1.884
+  Total effect       0.934       1.052       1.109       1.395       1.737       1.827       1.966
+
+ Other effects
+
+  Pure natural IE   -0.003      -0.001       0.001       0.007       0.014       0.016       0.018
+  Tot natural DE    -0.018       0.004       0.010       0.049       0.079       0.085       0.098
+  Total effect      -0.011       0.010       0.019       0.056       0.088       0.094       0.107
+
+ Odds ratios for other effects for binary Y
+
+  Pure natural IE    0.985       0.996       1.003       1.039       1.078       1.087       1.108
+  Tot natural DE     0.909       1.020       1.056       1.343       1.658       1.734       1.884
+  Total effect       0.934       1.052       1.109       1.395       1.737       1.827       1.966
+
+Effects from EDU_CT to ECON for CHILD_CT = 1.000
+
+  Tot natural IE    -0.017      -0.010      -0.008       0.002       0.013       0.014       0.018
+  Pure natural DE   -0.020       0.004       0.011       0.056       0.091       0.097       0.109
+  Total effect      -0.025       0.000       0.011       0.058       0.093       0.099       0.109
+
+ Odds ratios for binary Y
+
+  Tot natural IE     0.912       0.946       0.955       1.012       1.076       1.086       1.108
+  Pure natural DE    0.910       1.020       1.056       1.343       1.657       1.736       1.883
+  Total effect       0.887       1.007       1.060       1.359       1.690       1.778       1.878
+
+ Other effects
+
+  Pure natural IE   -0.019      -0.011      -0.009       0.002       0.015       0.017       0.020
+  Tot natural DE    -0.018       0.006       0.012       0.055       0.090       0.097       0.111
+  Total effect      -0.025       0.000       0.011       0.058       0.093       0.099       0.109
+
+ Odds ratios for other effects for binary Y
+
+  Pure natural IE    0.912       0.947       0.955       1.012       1.076       1.086       1.109
+  Tot natural DE     0.910       1.020       1.056       1.343       1.656       1.736       1.882
+  Total effect       0.887       1.007       1.060       1.359       1.690       1.778       1.878
+
+
+RESIDUAL OUTPUT
+
+
+     RESIDUALS ARE NOT AVAILABLE FOR THE CATEGORICAL VARIABLES.
+
+
+TECHNICAL 1 OUTPUT
+
+
+     PARAMETER SPECIFICATION
+
+
+           TAU
+              INCN$1        ECON$1
+              ________      ________
+                    6             7
+
+
+           NU
+              INCN          ECON          EDU_CT        CHILD_CT      INT
+              ________      ________      ________      ________      ________
+                    0             0             0             0             0
+
+
+           LAMBDA
+              INCN          ECON          EDU_CT        CHILD_CT      INT
+              ________      ________      ________      ________      ________
+ INCN               0             0             0             0             0
+ ECON               0             0             0             0             0
+ EDU_CT             0             0             0             0             0
+ CHILD_CT           0             0             0             0             0
+ INT                0             0             0             0             0
+
+
+           THETA
+              INCN          ECON          EDU_CT        CHILD_CT      INT
+              ________      ________      ________      ________      ________
+ INCN               0
+ ECON               0             0
+ EDU_CT             0             0             0
+ CHILD_CT           0             0             0             0
+ INT                0             0             0             0             0
+
+
+           ALPHA
+              INCN          ECON          EDU_CT        CHILD_CT      INT
+              ________      ________      ________      ________      ________
+                    0             0             0             0             0
+
+
+           BETA
+              INCN          ECON          EDU_CT        CHILD_CT      INT
+              ________      ________      ________      ________      ________
+ INCN               0             0             1             0             0
+ ECON               2             0             3             4             5
+ EDU_CT             0             0             0             0             0
+ CHILD_CT           0             0             0             0             0
+ INT                0             0             0             0             0
+
+
+           PSI
+              INCN          ECON          EDU_CT        CHILD_CT      INT
+              ________      ________      ________      ________      ________
+ INCN               0
+ ECON               0             0
+ EDU_CT             0             0             0
+ CHILD_CT           0             0             0             0
+ INT                0             0             0             0             0
+
+
+     STARTING VALUES
+
+
+           TAU
+              INCN$1        ECON$1
+              ________      ________
+                1.678        -1.099
+
+
+           NU
+              INCN          ECON          EDU_CT        CHILD_CT      INT
+              ________      ________      ________      ________      ________
+                0.000         0.000         0.000         0.000         0.000
+
+
+           LAMBDA
+              INCN          ECON          EDU_CT        CHILD_CT      INT
+              ________      ________      ________      ________      ________
+ INCN           1.000         0.000         0.000         0.000         0.000
+ ECON           0.000         1.000         0.000         0.000         0.000
+ EDU_CT         0.000         0.000         1.000         0.000         0.000
+ CHILD_CT       0.000         0.000         0.000         1.000         0.000
+ INT            0.000         0.000         0.000         0.000         1.000
+
+
+           THETA
+              INCN          ECON          EDU_CT        CHILD_CT      INT
+              ________      ________      ________      ________      ________
+ INCN           0.000
+ ECON           0.000         0.000
+ EDU_CT         0.000         0.000         0.000
+ CHILD_CT       0.000         0.000         0.000         0.000
+ INT            0.000         0.000         0.000         0.000         0.000
+
+
+           ALPHA
+              INCN          ECON          EDU_CT        CHILD_CT      INT
+              ________      ________      ________      ________      ________
+                0.000         0.000         0.000         0.000         0.000
+
+
+           BETA
+              INCN          ECON          EDU_CT        CHILD_CT      INT
+              ________      ________      ________      ________      ________
+ INCN           0.000         0.000         0.000         0.000         0.000
+ ECON           0.000         0.000         0.000         0.000         0.000
+ EDU_CT         0.000         0.000         0.000         0.000         0.000
+ CHILD_CT       0.000         0.000         0.000         0.000         0.000
+ INT            0.000         0.000         0.000         0.000         0.000
+
+
+           PSI
+              INCN          ECON          EDU_CT        CHILD_CT      INT
+              ________      ________      ________      ________      ________
+ INCN           1.000
+ ECON           0.000         1.000
+ EDU_CT         0.000         0.000         0.020
+ CHILD_CT       0.000         0.000         0.000         0.305
+ INT            0.000         0.000         0.000         0.000         0.045
+
+
+TECHNICAL 4 OUTPUT
+
+
+     TECHNICAL 4 OUTPUT IS NOT AVAILABLE FOR THIS MODEL.
+
+
+TECHNICAL 10 OUTPUT
+
+
+     TECH10 OUTPUT FOR CATEGORICAL VARIABLES IS NOT AVAILABLE FOR MODELS WITH COVARIATES.
+
+
+TECHNICAL 8 OUTPUT
+
+
+   E STEP  ITER  LOGLIKELIHOOD    ABS CHANGE   REL CHANGE  ALGORITHM
+              1 -0.71690261D+04    0.0000000    0.0000000  EM
+              2 -0.71151533D+04   53.8727941    0.0075147  EM
+              3 -0.71147280D+04    0.4253099    0.0000598  EM
+              4 -0.71147280D+04    0.0000752    0.0000000  EM
+
+
+DIAGRAM INFORMATION
+
+  Use View Diagram under the Diagram menu in the Mplus Editor to view the diagram.
+  If running Mplus from the Mplus Diagrammer, the diagram opens automatically.
+
+  Diagram output
+    c:\users\lzhs\desktop\markdown_latex\rmarkdown\bookdown\test_bookdown_new\20230927 lta\interge_rela\result_mediation
+
+     Beginning Time:  09:34:07
+        Ending Time:  09:34:36
+       Elapsed Time:  00:00:29
+
+
+
+MUTHEN & MUTHEN
+3463 Stoner Ave.
+Los Angeles, CA  90066
+
+Tel: (310) 391-9971
+Fax: (310) 391-8971
+Web: www.StatModel.com
+Support: Support@StatModel.com
+
+Copyright (c) 1998-2024 Muthen & Muthen
