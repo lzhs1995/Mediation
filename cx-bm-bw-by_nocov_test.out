@@ -1,0 +1,1321 @@
+Mplus VERSION 8.11
+MUTHEN & MUTHEN
+06/24/2025   5:28 PM
+
+INPUT INSTRUCTIONS
+
+
+
+
+  TITLE:
+  Mediation_edun3-incc-dw1-eco_simple_slope_mfocal
+  DATA:
+  FILE = "modmed.ct2.dat";
+
+  VARIABLE:
+  NAMES = cid clo eco hg op op5 age1 edu1 siops1 incc1 hw1 agen agen1 agen2 agen3 edun
+       edun1 edun2 edun3 siopsn sipn1 sipn2 sipn3 age edu siops incc hw child eacc
+       eaccc hacc haccc dw1 dw11 dw12 dw13 dw1g1 dw1g3 ag ag1 ag2 ag3 agg1 agg3 agc
+       sib sib1 sib2 sib3 sibg1 sibg3 dw1f dw1m agcf agcm sibf sibm sibf1 sibf2 sibf3
+       sibfg1 sibfg3 sibm1 sibm2 sibm3 sibmg1 sibmg3 hk hk1 hk2 hk3 hkg1 hkg3 prtage
+       prtage1 prtage2 prtage3 prtageg1 prtageg3 prtsex prtmar prtmar1 prtmar2 prtmar3
+       prtmarg1 prtmarg3 prtedu prtedu1 prtedu2 prtedu3 prtedug1 prtedug3 prthk prthk1
+       prthk2 prthk3 prthkg1 prthkg3 prtcor prtcor1 prtcor2 prtcor3 prtcorg1 prtcorg3
+       prtpt prtpt1 prtpt2 prtpt3 prtptg1 prtptg3 prtcdn prtcdn1 prtcdn2 prtcdn3
+       prtcdng1 prtcdng3 fincc urban prov prov1 prov2 prov3 provg1 provg3 hwc hwc1
+       hwc2 hwc3 hwcg1 hwcg3 jobc jobc1 jobc2 jobc3 jobcg1 jobcg3 fcz fcz1 fcz2 fcz3
+       fczg1 fczg3 resp resp1 resp2 resp3 respg1 respg3 year year1 year2 year3
+       lifetime age_ct edu_ct siops_ct incc_ct hw_ct child_ct agc_ct agcf_ct agcm_ct
+       fincc_ct agectf eductf siopsctf inccctf hwctf agectm eductm siopsctm inccctm
+       hwctm agenn edunn siopsnn incn hwn clon econ hgn opn agennf edunnf siopsnnf
+       incnf hwnf clonf econf hgnf opnf agennm edunnm siopsnnm incnm hwnm clonm econm
+       hgnm opnm;
+  MISSING=.;
+  categorical = incnf econf;
+  USEVARIABLES =
+  econf ! Outcome (Y): Binary
+  incnf ! Mediator (M): Binary
+  eductf ! Exposure (X): Binary
+  !agectf siopsctf
+
+  !hwnf
+  !child_ct  ! Moderator (W): Continuous
+  !agc_ct
+  dw11 dw13
+  !hk1 hk3
+  !prtage1 prtage3 prtmar1 prtmar3 prtedu1 prtedu3
+  !prthk1 prthk3 prtcor1 prtcor3 prtpt1 prtpt3
+  !fincc_ct urban prov1 prov3
+  !jobc1 jobc3 hwc1 hwc3
+  !fcz1 fcz3 resp1 resp3 year2 year3 lifetime
+
+  int1 int3
+  intem ! exposure-mediator interaction
+  intemw1 intemw3
+  ;
+
+  DEFINE:
+  int1 = incnf * dw11; ! Mediator-Moderator Interaction
+  int3 = incnf * dw13; ! Mediator-Moderator Interaction
+  intem = incnf * eductf; ! Exposure-Mediator Interaction
+  intemw1 = intem * dw11; ! Exposure-Mediator Moderator Interaction
+  intemw3 = intem * dw13; ! Exposure-Mediator Moderator Interaction
+
+  ANALYSIS:
+  !starts = 10;
+  processors = 10;
+  estimator = ML;
+  bootstrap = 1000;
+
+  ! In model statement name each path and intercept using parentheses
+  MODEL:
+
+  !!! Outcomes var on mediators + IVs
+  ! Y on b0 + b1X + b2M + b3XM + b4W1 + b4W3 + b51MW1 + b53MW3 + b61XMW1 + b63XMW1
+  ! Y on b0 + b1X + b2M + b3XM + (b41 + b51M + b61XM)W1 + (b43 + b53M + b63XM)W3
+  [econf$1] (b0);  !!! Interception of Y
+  econf ON eductf (b1);  !!! X main effect
+  econf ON incnf (b2);  !!! M main effect
+  econf ON intem (b3); !!! Exposure-Mediator Interaction
+  econf ON dw11(b41);
+  econf ON dw13(b43);
+  econf ON int1 (b51); !!! Mediator-Moderator Interaction
+  econf ON int3 (b53); !!! Mediator-Moderator Interaction
+  econf ON intemw1 (b61); !!! Exposure-Mediator-Moderator Interaction
+  econf ON intemw3 (b63); !!! Exposure-Mediator-Moderator Interaction
+
+  !!! Mediator on IVs
+  ! M on a0 + a1X
+  [incnf$1] (a0);  !!! Interception of M
+  incnf ON eductf (a1);  !!! X main effect
+
+
+
+   !!! Add covariates for Outcomes var
+
+    !!! When predictor = age
+
+
+    !!! When predictor = edu
+
+    !econ on agectf siopsctf;  ! else predictor as covariates
+    !econ on hwnf;  ! else mediator as covariates
+    !econ on agc_ct child_ct;  ! else moderator as covariates
+
+
+
+
+
+
+
+
+
+    !!! When predictor = siops
+
+    !econ on hk1 hk3;
+    !econ on prtage1 prtage3 prtmar1 prtmar3 prtedu1 prtedu3;
+    !econ on prthk1 prthk3 prtcor1 prtcor3 prtpt1 prtpt3;
+    !econ on fincc_ct urban prov1 prov3;
+    !econ on fcz1 fcz3 resp1 resp3 year2 year3 lifetime;
+
+
+
+    !!! Add covariates for Mediator
+
+    !incn on agectf siopsctf hwnf;  ! control for MedV's covariates
+
+
+
+    !incn on hk1 hk3;
+    !incn on fincc_ct urban prov1 prov3;
+    !incn on jobc1 jobc3 hwc1 hwc3 fcz1 fcz3 resp1 resp3 year2 year3 lifetime;
+    !incn on fcz1 fcz3 resp1 resp3 year2 year3 lifetime;
+
+
+
+  ! MOD command
+  Model Indirect:
+  econf MOD incnf intem eductf; ! Y on M MX X
+  !econf MOD incnf dw11(0,1,1) int1 eductf;
+
+  MODEL CONSTRAINT:
+    NEW(W1l W3l);
+    NEW(P_M0_X0 P_M1_X0 P_M0_X1 P_M1_X1);  ! P(M|X)
+    NEW(E_Y00_Wl E_Y01_Wl E_Y10_Wl E_Y11_Wl);  ! E[Y|X,M]
+    NEW(E_Y0M0_Wl E_Y0M1_Wl E_Y1M0_Wl E_Y1M1_Wl);  ! E[Y(x, M(x'))]
+    NEW(TNIE_Wl PNDE_Wl PNIE_Wl TNDE_Wl TE_Wl);  ! Effect decomposition
+
+    NEW(W1m W3m);
+    !NEW(P_M0_X0 P_M1_X0 P_M0_X1 P_M1_X1);  ! P(M|X)
+    NEW(E_Y00_Wm E_Y01_Wm E_Y10_Wm E_Y11_Wm);  ! E[Y|X,M]
+    NEW(E_Y0M0_Wm E_Y0M1_Wm E_Y1M0_Wm E_Y1M1_Wm);  ! E[Y(x, M(x'))]
+    NEW(TNIE_Wm PNDE_Wm PNIE_Wm TNDE_Wm TE_Wm);  ! Effect decomposition
+
+    NEW(W1h W3h);
+    !NEW(P_M0_X0 P_M1_X0 P_M0_X1 P_M1_X1);  ! P(M|X)
+    NEW(E_Y00_Wh E_Y01_Wh E_Y10_Wh E_Y11_Wh);  ! E[Y|X,M]
+    NEW(E_Y0M0_Wh E_Y0M1_Wh E_Y1M0_Wh E_Y1M1_Wh);  ! E[Y(x, M(x'))]
+    NEW(TNIE_Wh PNDE_Wh PNIE_Wh TNDE_Wh TE_Wh);  ! Effect decomposition
+
+    New(TNIE_dfl PNDE_dfl TNDE_dfl PNIE_dfl TE_dfl);
+    New(TNIE_dfh PNDE_dfh TNDE_dfh PNIE_dfh TE_dfh);
+
+
+  ! Y on b0 + b1X + b2M + b3XM + (b41 + b51M + b61XM)W1 + (b43 + b53M + b63XM)W3
+  ! Step 0: Define moderator
+  ! wife < husband
+  W1l = 1;
+  W3l = 0;
+
+  ! wife = husband
+  W1m = 0;
+  W3m = 0;
+
+  ! wife > husband
+  W1h = 0;
+  W3h = 1;
+
+
+
+    ! Step 1: P(M|X)
+    P_M1_X0 = 1 / (1 + EXP(a0));  ! P(M=1|X=0)
+    P_M1_X1 = 1 / (1 + EXP(a0 - a1));  ! P(M=1|X=1)
+    P_M0_X0 = 1 - P_M1_X0;  ! P(M=0|X=0)
+    P_M0_X1 = 1 - P_M1_X1;  ! P(M=0|X=1)
+
+
+    ! Step 2: Moderated Mediation Result
+
+    ! Step 2.1: Moderator is wife < husband
+    ! Step 2.1.1: Conditional expectations of Y given X and M:
+    E_Y00_Wl = 1 / (1+EXP(b0 - b41*W1l - b43*W3l));                        ! E(Y|X=0, M=0)
+    E_Y01_Wl = 1 / (1+EXP(b0 - b2 - b41*W1l - b51*W1l - b43*W3l - b53*W3l));
+    E_Y10_Wl = 1 / (1+EXP(b0 - b1 - b41*W1l - b43*W3l));                   ! E(Y|X=1, M=0)
+    E_Y11_Wl = 1 / (1+EXP(b0 - b1 - b2 - b3 - (b41+b51+b61)*W1l - (b43+b53+b63)*W3l));
+
+    ! Step 2.1.2: Counterfactual expectations:
+    E_Y0M0_Wl = (E_Y00_Wl * P_M0_X0) + (E_Y01_Wl * P_M1_X0);  ! E[Y(0, M(0))]
+    E_Y0M1_Wl = (E_Y00_Wl * P_M0_X1) + (E_Y01_Wl * P_M1_X1);  ! E[Y(0, M(1))]
+    E_Y1M0_Wl = (E_Y10_Wl * P_M0_X0) + (E_Y11_Wl * P_M1_X0);  ! E[Y(1, M(0))]
+    E_Y1M1_Wl = (E_Y10_Wl * P_M0_X1) + (E_Y11_Wl * P_M1_X1);  ! E[Y(1, M(1))]
+
+    ! Step 2.1.3: Effect decomposition:
+    TNIE_Wl = E_Y1M1_Wl - E_Y1M0_Wl;  ! Total Natural Indirect Effect
+    PNDE_Wl = E_Y1M0_Wl - E_Y0M0_Wl;  ! Pure Natural Direct Effect
+    TNDE_Wl = E_Y1M1_Wl - E_Y0M1_Wl;  ! Total Natural Direct Effect
+    PNIE_Wl = E_Y0M1_Wl - E_Y0M0_Wl;  ! Pure Natural Indirect Effect
+    TE_Wl = E_Y1M1_Wl-E_Y0M0_Wl;      ! Total Effect
+    !TE = PNDE + TNIE;                ! Total Effect
+    !TE = TNDE + PNIE;                ! Total Effect
+    !TE =  PNDE + PNIE + (TNIE - PNIE);        ! Total Effect
+    !TE =  PNDE + PNIE + (TNDE - PNDE).        ! Total Effect
+
+
+    ! Step 2.2: Moderator is wife > husband
+    ! Step 2.2.1: Conditional expectations of Y given X and M:
+    E_Y00_Wm = 1 / (1+EXP(b0 - b41*W1m - b43*W3m));                        ! E(Y|X=0, M=0)
+    E_Y01_Wm = 1 / (1+EXP(b0 - b2 - b41*W1m - b51*W1m - b43*W3m - b53*W3m));
+    E_Y10_Wm = 1 / (1+EXP(b0 - b1 - b41*W1m - b43*W3m));                   ! E(Y|X=1, M=0)
+    E_Y11_Wm = 1 / (1+EXP(b0 - b1 - b2 - b3 - (b41+b51+b61)*W1m - (b43+b53+b63)*W3m));
+
+    ! Step 2.2.2: Counterfactual expectations:
+    E_Y0M0_Wm = (E_Y00_Wm * P_M0_X0) + (E_Y01_Wm * P_M1_X0);  ! E[Y(0, M(0))]
+    E_Y0M1_Wm = (E_Y00_Wm * P_M0_X1) + (E_Y01_Wm * P_M1_X1);  ! E[Y(0, M(1))]
+    E_Y1M0_Wm = (E_Y10_Wm * P_M0_X0) + (E_Y11_Wm * P_M1_X0);  ! E[Y(1, M(0))]
+    E_Y1M1_Wm = (E_Y10_Wm * P_M0_X1) + (E_Y11_Wm * P_M1_X1);  ! E[Y(1, M(1))]
+
+    ! Step 2.2.3: Effect decomposition:
+    TNIE_Wm = E_Y1M1_Wm - E_Y1M0_Wm;  ! Total Natural Indirect Effect
+    PNDE_Wm = E_Y1M0_Wm - E_Y0M0_Wm;  ! Pure Natural Direct Effect
+    TNDE_Wm = E_Y1M1_Wm - E_Y0M1_Wm;  ! Total Natural Direct Effect
+    PNIE_Wm = E_Y0M1_Wm - E_Y0M0_Wm;  ! Pure Natural Indirect Effect
+    TE_Wm = E_Y1M1_Wm-E_Y0M0_Wm;      ! Total Effect
+
+
+
+    ! Step 2.3: Moderator is wife > husband
+    ! Step 2.3.1: Conditional expectations of Y given X and M:
+    E_Y00_Wh = 1 / (1+EXP(b0 - b41*W1h - b43*W3h));                        ! E(Y|X=0, M=0)
+    E_Y01_Wh = 1 / (1+EXP(b0 - b2 - b41*W1h - b51*W1h - b43*W3h - b53*W3h));
+    E_Y10_Wh = 1 / (1+EXP(b0 - b1 - b41*W1h - b43*W3h));                   ! E(Y|X=1, M=0)
+    E_Y11_Wh = 1 / (1+EXP(b0 - b1 - b2 - b3 - (b41+b51+b61)*W1h - (b43+b53+b63)*W3h));
+
+    ! Step 2.3.2: Counterfactual expectations:
+    E_Y0M0_Wh = (E_Y00_Wh * P_M0_X0) + (E_Y01_Wh * P_M1_X0);  ! E[Y(0, M(0))]
+    E_Y0M1_Wh = (E_Y00_Wh * P_M0_X1) + (E_Y01_Wh * P_M1_X1);  ! E[Y(0, M(1))]
+    E_Y1M0_Wh = (E_Y10_Wh * P_M0_X0) + (E_Y11_Wh * P_M1_X0);  ! E[Y(1, M(0))]
+    E_Y1M1_Wh = (E_Y10_Wh * P_M0_X1) + (E_Y11_Wh * P_M1_X1);  ! E[Y(1, M(1))]
+
+    ! Step 2.3.3: Effect decomposition:
+    TNIE_Wh = E_Y1M1_Wh - E_Y1M0_Wh;  ! Total Natural Indirect Effect
+    PNDE_Wh = E_Y1M0_Wh - E_Y0M0_Wh;  ! Pure Natural Direct Effect
+    TNDE_Wh = E_Y1M1_Wh - E_Y0M1_Wh;  ! Total Natural Direct Effect
+    PNIE_Wh = E_Y0M1_Wh - E_Y0M0_Wh;  ! Pure Natural Indirect Effect
+    TE_Wh = E_Y1M1_Wh-E_Y0M0_Wh;      ! Total Effect
+
+
+    ! Step 3: Index of Moderated Mediation
+
+    ! Step 3.1: Wl - Wm
+    TNIE_dfl = TNIE_Wl - TNIE_Wm;
+    PNDE_dfl = PNDE_Wl - PNDE_Wm;
+    TNDE_dfl = TNDE_Wl - TNDE_Wm;
+    PNIE_dfl = PNIE_Wl - PNIE_Wm;
+    TE_dfl = TE_Wl - TE_Wm;
+
+    ! Step 3.2: Wh - Wm
+    TNIE_dfh = TNIE_Wh - TNIE_Wm;
+    PNDE_dfh = PNDE_Wh - PNDE_Wm;
+    TNDE_dfh = TNDE_Wh - TNDE_Wm;
+    PNIE_dfh = PNIE_Wh - PNIE_Wm;
+    TE_dfh = TE_Wh - TE_Wm;
+
+  OUTPUT:
+  tech1 tech4 tech8 tech10 tech11 tech15 sampstat residual stdyx CINTERVAL(bootstrap);
+  ! bias-corrected bootstrap confidence intervals; With frequentist estimation,
+  ! only SYMMETRIC confidence intervals are available for standardized parameter estimates.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+*** WARNING in OUTPUT command
+  STANDARDIZED (STD, STDY, STDYX) options are not available for analysis with
+  the MOD statement in MODEL INDIRECT.
+  Request for STANDARDIZED (STD, STDY, STDYX) is ignored.
+*** WARNING in OUTPUT command
+  TECH11 option is available only with TYPE=MIXTURE.
+  Request for TECH11 is ignored.
+*** WARNING in OUTPUT command
+  TECH15 option is only available for TYPE=MIXTURE.
+  Request for TECH15 will be ignored.
+   3 WARNING(S) FOUND IN THE INPUT INSTRUCTIONS
+
+
+
+
+Mediation_edun3-incc-dw1-eco_simple_slope_mfocal
+
+SUMMARY OF ANALYSIS
+
+Number of groups                                                 1
+Number of observations                                        9028
+
+Number of dependent variables                                    2
+Number of independent variables                                  8
+Number of continuous latent variables                            0
+
+Observed dependent variables
+
+  Binary and ordered categorical (ordinal)
+   ECONF       INCNF
+
+Observed independent variables
+   EDUCTF      DW11        DW13        INT1        INT3        INTEM
+   INTEMW1     INTEMW3
+
+
+Estimator                                                       ML
+Information matrix                                        OBSERVED
+Optimization Specifications for the Quasi-Newton Algorithm for
+Continuous Outcomes
+  Maximum number of iterations                                 100
+  Convergence criterion                                  0.100D-05
+Optimization Specifications for the EM Algorithm
+  Maximum number of iterations                                 500
+  Convergence criteria
+    Loglikelihood change                                 0.100D-02
+    Relative loglikelihood change                        0.100D-05
+    Derivative                                           0.100D-02
+Optimization Specifications for the M step of the EM Algorithm for
+Categorical Latent variables
+  Number of M step iterations                                    1
+  M step convergence criterion                           0.100D-02
+  Basis for M step termination                           ITERATION
+Optimization Specifications for the M step of the EM Algorithm for
+Censored, Binary or Ordered Categorical (Ordinal), Unordered
+Categorical (Nominal) and Count Outcomes
+  Number of M step iterations                                    1
+  M step convergence criterion                           0.100D-02
+  Basis for M step termination                           ITERATION
+  Maximum value for logit thresholds                            15
+  Minimum value for logit thresholds                           -15
+  Minimum expected cell size for chi-square              0.100D-01
+Maximum number of iterations for H1                           2000
+Convergence criterion for H1                             0.100D-03
+Number of bootstrap draws
+    Requested                                                 1000
+    Completed                                                 1000
+Optimization algorithm                                         EMA
+Integration Specifications
+  Type                                                    STANDARD
+  Number of integration points                                  15
+  Dimensions of numerical integration                            0
+  Adaptive quadrature                                           ON
+Link                                                         LOGIT
+Cholesky                                                       OFF
+
+Input data file(s)
+  modmed.ct2.dat
+Input data format  FREE
+
+
+SUMMARY OF DATA
+
+     Number of missing data patterns             1
+     Number of y missing data patterns           0
+     Number of u missing data patterns           1
+
+
+COVARIANCE COVERAGE OF DATA
+
+Minimum covariance coverage value   0.100
+
+
+UNIVARIATE PROPORTIONS AND COUNTS FOR CATEGORICAL VARIABLES
+
+    ECONF
+      Category 1    0.740         6677.000
+      Category 2    0.260         2351.000
+    INCNF
+      Category 1    0.838         7566.000
+      Category 2    0.162         1462.000
+
+
+SAMPLE STATISTICS
+
+
+     SAMPLE STATISTICS
+
+
+           Means
+              EDUCTF        DW11          DW13          INT1          INT3
+              ________      ________      ________      ________      ________
+               -0.053         0.367         0.123         0.066         0.019
+
+
+           Means
+              INTEM         INTEMW1       INTEMW3
+              ________      ________      ________
+               -0.002        -0.001         0.000
+
+
+           Covariances
+              EDUCTF        DW11          DW13          INT1          INT3
+              ________      ________      ________      ________      ________
+ EDUCTF         0.038
+ DW11           0.002         0.232
+ DW13           0.003        -0.045         0.107
+ INT1           0.003         0.042        -0.008         0.062
+ INT3           0.001        -0.007         0.016        -0.001         0.018
+ INTEM          0.005         0.000         0.000        -0.001         0.000
+ INTEMW1        0.002        -0.001         0.000        -0.001         0.000
+ INTEMW3        0.000         0.000         0.000         0.000         0.000
+
+
+           Covariances
+              INTEM         INTEMW1       INTEMW3
+              ________      ________      ________
+ INTEM          0.005
+ INTEMW1        0.002         0.002
+ INTEMW3        0.000         0.000         0.000
+
+
+           Correlations
+              EDUCTF        DW11          DW13          INT1          INT3
+              ________      ________      ________      ________      ________
+ EDUCTF         1.000
+ DW11           0.016         1.000
+ DW13           0.045        -0.285         1.000
+ INT1           0.055         0.349        -0.099         1.000
+ INT3           0.042        -0.105         0.370        -0.037         1.000
+ INTEM          0.343         0.001         0.019        -0.039         0.019
+ INTEMW1        0.201        -0.026         0.008        -0.076         0.003
+ INTEMW3        0.092        -0.006         0.020        -0.002         0.055
+
+
+           Correlations
+              INTEM         INTEMW1       INTEMW3
+              ________      ________      ________
+ INTEM          1.000
+ INTEMW1        0.587         1.000
+ INTEMW3        0.257         0.000         1.000
+
+
+UNIVARIATE SAMPLE STATISTICS
+
+
+     UNIVARIATE HIGHER-ORDER MOMENT DESCRIPTIVE STATISTICS
+
+         Variable/         Mean/     Skewness/   Minimum/ % with                Percentiles
+        Sample Size      Variance    Kurtosis    Maximum  Min/Max      20%/60%    40%/80%    Median
+
+     EDUCTF               -0.053      -0.631      -0.500   11.73%      -0.100      0.000      0.000
+            9028.000       0.038       2.229       0.500    3.09%       0.000      0.000
+     DW11                  0.367       0.552       0.000   63.29%       0.000      0.000      0.000
+            9028.000       0.232      -1.696       1.000   36.71%       0.000      1.000
+     DW13                  0.123       2.303       0.000   87.75%       0.000      0.000      0.000
+            9028.000       0.107       3.302       1.000   12.25%       0.000      0.000
+     INT1                  0.066       3.499       0.000   93.41%       0.000      0.000      0.000
+            9028.000       0.062      10.244       1.000    6.59%       0.000      0.000
+     INT3                  0.019       7.102       0.000   98.13%       0.000      0.000      0.000
+            9028.000       0.018      48.439       1.000    1.87%       0.000      0.000
+     INTEM                -0.002      -2.055      -0.500    1.10%       0.000      0.000      0.000
+            9028.000       0.005      42.746       0.500    0.53%       0.000      0.000
+     INTEMW1              -0.001      -3.519      -0.500    0.37%       0.000      0.000      0.000
+            9028.000       0.002     125.664       0.500    0.18%       0.000      0.000
+     INTEMW3               0.000       2.638      -0.500    0.04%       0.000      0.000      0.000
+            9028.000       0.000     645.636       0.500    0.06%       0.000      0.000
+
+
+THE MODEL ESTIMATION TERMINATED NORMALLY
+
+
+
+MODEL FIT INFORMATION
+
+Number of Free Parameters                       12
+
+Loglikelihood
+
+          H0 Value                       -9100.362
+
+Information Criteria
+
+          Akaike (AIC)                   18224.724
+          Bayesian (BIC)                 18310.021
+          Sample-Size Adjusted BIC       18271.887
+            (n* = (n + 2) / 24)
+
+
+
+MODEL RESULTS
+
+                                                    Two-Tailed
+                    Estimate       S.E.  Est./S.E.    P-Value
+
+ ECONF      ON
+    EDUCTF             0.378      0.139      2.716      0.007
+    INCNF              0.117      0.092      1.275      0.202
+    INTEM             -0.447      0.467     -0.957      0.338
+    DW11              -0.207      0.055     -3.752      0.000
+    DW13               0.260      0.080      3.244      0.001
+    INT1               0.482      0.138      3.491      0.000
+    INT3               0.153      0.199      0.769      0.442
+    INTEMW1           -0.117      0.706     -0.165      0.869
+    INTEMW3            1.918      1.696      1.131      0.258
+
+ INCNF      ON
+    EDUCTF             1.269      0.151      8.410      0.000
+
+ Thresholds
+    ECONF$1            1.045      0.037     28.003      0.000
+    INCNF$1            1.597      0.030     54.094      0.000
+
+New/Additional Parameters
+    W1L                1.000      0.000  *********      0.000
+    W3L                0.000      0.000      0.000      1.000
+    P_M0_X0            0.832      0.004    201.440      0.000
+    P_M1_X0            0.168      0.004     40.784      0.000
+    P_M0_X1            0.581      0.038     15.196      0.000
+    P_M1_X1            0.419      0.038     10.940      0.000
+    E_Y00_WL           0.222      0.008     28.746      0.000
+    E_Y01_WL           0.342      0.020     17.356      0.000
+    E_Y10_WL           0.294      0.032      9.311      0.000
+    E_Y11_WL           0.302      0.115      2.617      0.009
+    E_Y0M0_W           0.242      0.007     33.592      0.000
+    E_Y0M1_W           0.273      0.011     25.384      0.000
+    E_Y1M0_W           0.296      0.032      9.114      0.000
+    E_Y1M1_W           0.298      0.052      5.725      0.000
+    TNIE_WL            0.002      0.031      0.060      0.952
+    PNDE_WL            0.053      0.030      1.750      0.080
+    PNIE_WL            0.030      0.007      4.157      0.000
+    TNDE_WL            0.025      0.050      0.498      0.618
+    TE_WL              0.055      0.051      1.088      0.276
+    W1M                0.000      0.000      0.000      1.000
+    W3M                0.000      0.000      0.000      1.000
+    E_Y00_WM           0.260      0.007     36.257      0.000
+    E_Y01_WM           0.283      0.017     16.663      0.000
+    E_Y10_WM           0.339      0.034      9.884      0.000
+    E_Y11_WM           0.270      0.090      2.986      0.003
+    E_Y0M0_W           0.264      0.007     39.804      0.000
+    E_Y0M1_W           0.270      0.008     32.705      0.000
+    E_Y1M0_W           0.327      0.032     10.117      0.000
+    E_Y1M1_W           0.310      0.043      7.202      0.000
+    TNIE_WM           -0.017      0.025     -0.709      0.478
+    PNDE_WM            0.063      0.030      2.094      0.036
+    PNIE_WM            0.006      0.005      1.251      0.211
+    TNDE_WM            0.040      0.042      0.967      0.333
+    TE_WM              0.046      0.042      1.100      0.271
+    W1H                0.000      0.000      0.000      1.000
+    W3H                1.000      0.000  *********      0.000
+    E_Y00_WH           0.313      0.016     19.986      0.000
+    E_Y01_WH           0.374      0.038      9.953      0.000
+    E_Y10_WH           0.400      0.039     10.340      0.000
+    E_Y11_WH           0.792      0.220      3.595      0.000
+    E_Y0M0_W           0.324      0.015     22.194      0.000
+    E_Y0M1_W           0.339      0.019     18.150      0.000
+    E_Y1M0_W           0.466      0.049      9.531      0.000
+    E_Y1M1_W           0.564      0.096      5.876      0.000
+    TNIE_WH            0.098      0.058      1.687      0.092
+    PNDE_WH            0.142      0.046      3.124      0.002
+    PNIE_WH            0.015      0.011      1.431      0.152
+    TNDE_WH            0.225      0.095      2.376      0.018
+    TE_WH              0.240      0.094      2.546      0.011
+    TNIE_DFL           0.019      0.038      0.510      0.610
+    PNDE_DFL          -0.010      0.024     -0.422      0.673
+    TNDE_DFL          -0.015      0.061     -0.250      0.802
+    PNIE_DFL           0.024      0.008      2.870      0.004
+    TE_DFL             0.009      0.061      0.147      0.883
+    TNIE_DFH           0.115      0.062      1.875      0.061
+    PNDE_DFH           0.079      0.040      1.960      0.050
+    TNDE_DFH           0.185      0.100      1.842      0.066
+    PNIE_DFH           0.009      0.011      0.820      0.412
+    TE_DFH             0.194      0.100      1.938      0.053
+
+
+LOGISTIC REGRESSION ODDS RATIO RESULTS
+
+                                                95% C.I.
+                    Estimate       S.E.  Lower 2.5% Upper 2.5%
+
+ ECONF      ON
+    EDUCTF             1.460      0.203      1.113      1.935
+    INCNF              1.125      0.103      0.930      1.328
+    INTEM              0.639      0.299      0.254      1.634
+    DW11               0.813      0.045      0.724      0.898
+    DW13               1.297      0.104      1.104      1.506
+    INT1               1.619      0.224      1.234      2.170
+    INT3               1.165      0.232      0.789      1.739
+    INTEMW1            0.890      0.629      0.212      3.540
+    INTEMW3            6.808     11.544      0.420    328.862
+
+ INCNF      ON
+    EDUCTF             3.556      0.536      2.638      4.760
+
+
+
+TOTAL, INDIRECT, AND DIRECT EFFECTS BASED ON COUNTERFACTUALS (CAUSALLY-DEFINED EFFECTS, CONDITIONAL ON ALL OTHER COVARIATES BEING ZERO)
+
+
+Effects from EDUCTF to ECONF
+
+                                                    Two-Tailed
+                    Estimate       S.E.  Est./S.E.    P-Value
+
+  Tot natural IE      -0.017      0.025     -0.709      0.478
+  Pure natural DE      0.063      0.030      2.094      0.036
+  Total effect         0.046      0.042      1.100      0.271
+
+ Odds ratios for binary Y
+
+                                                95% C.I.
+                    Estimate       S.E.  Lower 2.5% Upper 2.5%
+
+  Tot natural IE       0.923      0.108      0.753      1.186
+  Pure natural DE      1.357      0.191      1.052      1.809
+  Total effect         1.253      0.262      0.897      1.955
+
+ Other effects
+
+                                                    Two-Tailed
+                    Estimate       S.E.  Est./S.E.    P-Value
+
+  Pure natural IE      0.006      0.005      1.251      0.211
+  Tot natural DE       0.040      0.042      0.967      0.333
+  Total effect         0.046      0.042      1.100      0.271
+
+ Odds ratios for other effects for binary Y
+
+                                                95% C.I.
+                    Estimate       S.E.  Lower 2.5% Upper 2.5%
+
+  Pure natural IE      1.030      0.024      0.982      1.079
+  Tot natural DE       1.216      0.253      0.871      1.928
+  Total effect         1.253      0.262      0.897      1.955
+
+
+CONFIDENCE INTERVALS OF MODEL RESULTS
+
+                  Lower .5%  Lower 2.5%    Lower 5%    Estimate    Upper 5%  Upper 2.5%   Upper .5%
+
+ ECONF    ON
+    EDUCTF           0.047       0.107       0.146       0.378       0.603       0.660       0.759
+    INCNF           -0.133      -0.073      -0.048       0.117       0.266       0.284       0.338
+    INTEM           -1.697      -1.369      -1.205      -0.447       0.343       0.491       0.789
+    DW11            -0.365      -0.323      -0.299      -0.207      -0.121      -0.108      -0.074
+    DW13             0.038       0.099       0.123       0.260       0.385       0.410       0.460
+    INT1             0.107       0.210       0.273       0.482       0.723       0.775       0.843
+    INT3            -0.374      -0.237      -0.179       0.153       0.484       0.553       0.656
+    INTEMW1         -1.876      -1.550      -1.266      -0.117       1.054       1.264       1.720
+    INTEMW3         -2.370      -0.868      -0.477       1.918       4.805       5.796       7.315
+
+ INCNF    ON
+    EDUCTF           0.885       0.970       1.014       1.269       1.512       1.560       1.642
+
+ Thresholds
+    ECONF$1          0.954       0.974       0.983       1.045       1.108       1.124       1.145
+    INCNF$1          1.517       1.543       1.551       1.597       1.648       1.657       1.674
+
+New/Additional Parameters
+    W1L              1.000       1.000       1.000       1.000       1.000       1.000       1.000
+    W3L              0.000       0.000       0.000       0.000       0.000       0.000       0.000
+    P_M0_X0          0.820       0.824       0.825       0.832       0.839       0.840       0.842
+    P_M1_X0          0.158       0.160       0.161       0.168       0.175       0.176       0.179
+    P_M0_X1          0.482       0.507       0.517       0.581       0.645       0.658       0.677
+    P_M1_X1          0.322       0.342       0.355       0.419       0.483       0.493       0.514
+    E_Y00_WL         0.200       0.207       0.209       0.222       0.234       0.237       0.241
+    E_Y01_WL         0.288       0.302       0.309       0.342       0.375       0.380       0.390
+    E_Y10_WL         0.224       0.235       0.246       0.294       0.349       0.363       0.387
+    E_Y11_WL         0.088       0.121       0.150       0.302       0.521       0.557       0.676
+    E_Y0M0_W         0.221       0.228       0.230       0.242       0.253       0.256       0.259
+    E_Y0M1_W         0.242       0.251       0.255       0.273       0.290       0.294       0.298
+    E_Y1M0_W         0.213       0.239       0.250       0.296       0.356       0.371       0.393
+    E_Y1M1_W         0.186       0.216       0.227       0.298       0.396       0.410       0.471
+    TNIE_WL         -0.064      -0.046      -0.040       0.002       0.060       0.071       0.096
+    PNDE_WL         -0.017      -0.003       0.012       0.053       0.108       0.123       0.142
+    PNIE_WL          0.014       0.017       0.019       0.030       0.042       0.045       0.050
+    TNDE_WL         -0.087      -0.055      -0.042       0.025       0.121       0.135       0.200
+    TE_WL           -0.054      -0.022      -0.013       0.055       0.152       0.164       0.229
+    W1M              0.000       0.000       0.000       0.000       0.000       0.000       0.000
+    W3M              0.000       0.000       0.000       0.000       0.000       0.000       0.000
+    E_Y00_WM         0.241       0.245       0.248       0.260       0.272       0.274       0.278
+    E_Y01_WM         0.239       0.248       0.255       0.283       0.312       0.317       0.324
+    E_Y10_WM         0.262       0.274       0.284       0.339       0.397       0.410       0.436
+    E_Y11_WM         0.099       0.131       0.150       0.270       0.441       0.492       0.556
+    E_Y0M0_W         0.247       0.250       0.253       0.264       0.275       0.277       0.281
+    E_Y0M1_W         0.248       0.254       0.256       0.270       0.283       0.286       0.290
+    E_Y1M0_W         0.251       0.268       0.278       0.327       0.385       0.398       0.414
+    E_Y1M1_W         0.224       0.241       0.250       0.310       0.392       0.413       0.453
+    TNIE_WM         -0.076      -0.060      -0.052      -0.017       0.028       0.040       0.064
+    PNDE_WM         -0.006       0.010       0.018       0.063       0.119       0.130       0.146
+    PNIE_WM         -0.006      -0.004      -0.002       0.006       0.013       0.015       0.017
+    TNDE_WM         -0.038      -0.026      -0.016       0.040       0.118       0.146       0.176
+    TE_WM           -0.032      -0.020      -0.011       0.046       0.125       0.147       0.181
+    W1H              0.000       0.000       0.000       0.000       0.000       0.000       0.000
+    W3H              1.000       1.000       1.000       1.000       1.000       1.000       1.000
+    E_Y00_WH         0.272       0.281       0.287       0.313       0.338       0.343       0.354
+    E_Y01_WH         0.283       0.300       0.309       0.374       0.434       0.447       0.469
+    E_Y10_WH         0.312       0.325       0.337       0.400       0.465       0.481       0.509
+    E_Y11_WH         0.044       0.198       0.271       0.792       0.986       0.993       0.999
+    E_Y0M0_W         0.288       0.295       0.300       0.324       0.347       0.351       0.363
+    E_Y0M1_W         0.294       0.305       0.309       0.339       0.370       0.376       0.386
+    E_Y1M0_W         0.312       0.350       0.372       0.466       0.534       0.547       0.566
+    E_Y1M1_W         0.243       0.311       0.352       0.564       0.665       0.678       0.700
+    TNIE_WH         -0.100      -0.050      -0.032       0.098       0.163       0.173       0.191
+    PNDE_WH          0.008       0.032       0.050       0.142       0.205       0.215       0.234
+    PNIE_WH         -0.011      -0.005      -0.002       0.015       0.033       0.037       0.045
+    TNDE_WH         -0.082      -0.023       0.018       0.225       0.323       0.339       0.360
+    TE_WH           -0.076      -0.011       0.032       0.240       0.337       0.347       0.373
+    TNIE_DFL        -0.081      -0.052      -0.038       0.019       0.084       0.100       0.121
+    PNDE_DFL        -0.073      -0.058      -0.049      -0.010       0.030       0.041       0.055
+    TNDE_DFL        -0.176      -0.130      -0.109      -0.015       0.089       0.110       0.153
+    PNIE_DFL         0.004       0.009       0.012       0.024       0.039       0.043       0.049
+    TE_DFL          -0.149      -0.109      -0.084       0.009       0.115       0.136       0.174
+    TNIE_DFH        -0.077      -0.039      -0.019       0.115       0.185       0.201       0.221
+    PNDE_DFH        -0.048      -0.025      -0.011       0.079       0.119       0.124       0.137
+    TNDE_DFH        -0.131      -0.071      -0.037       0.185       0.295       0.308       0.331
+    PNIE_DFH        -0.020      -0.012      -0.009       0.009       0.030       0.033       0.042
+    TE_DFH          -0.129      -0.065      -0.029       0.194       0.299       0.318       0.345
+
+
+CONFIDENCE INTERVALS FOR THE LOGISTIC REGRESSION ODDS RATIO RESULTS
+
+ ECONF    ON
+    EDUCTF           1.048       1.113       1.157       1.460       1.828       1.935       2.135
+    INCNF            0.875       0.930       0.953       1.125       1.305       1.328       1.402
+    INTEM            0.183       0.254       0.300       0.639       1.409       1.634       2.201
+    DW11             0.695       0.724       0.742       0.813       0.886       0.898       0.929
+    DW13             1.038       1.104       1.131       1.297       1.470       1.506       1.584
+    INT1             1.113       1.234       1.314       1.619       2.061       2.170       2.323
+    INT3             0.688       0.789       0.836       1.165       1.623       1.739       1.927
+    INTEMW1          0.153       0.212       0.282       0.890       2.868       3.540       5.583
+    INTEMW3          0.094       0.420       0.620       6.808     122.142     328.862    1502.352
+
+ INCNF    ON
+    EDUCTF           2.422       2.638       2.755       3.556       4.534       4.760       5.167
+
+
+
+CONFIDENCE INTERVALS OF TOTAL, INDIRECT, AND DIRECT EFFECTS BASED ON COUNTERFACTUALS (CAUSALLY-DEFINED EFFECTS)
+
+
+                  Lower .5%  Lower 2.5%    Lower 5%    Estimate    Upper 5%  Upper 2.5%   Upper .5%
+
+Effects from EDUCTF to ECONF
+
+  Tot natural IE    -0.076      -0.060      -0.052      -0.017       0.028       0.040       0.064
+  Pure natural DE   -0.006       0.010       0.018       0.063       0.119       0.130       0.146
+  Total effect      -0.032      -0.020      -0.011       0.046       0.125       0.147       0.181
+
+ Odds ratios for binary Y
+
+  Tot natural IE     0.708       0.753       0.782       0.923       1.128       1.186       1.308
+  Pure natural DE    0.971       1.052       1.099       1.357       1.738       1.809       1.926
+  Total effect       0.837       0.897       0.944       1.253       1.759       1.955       2.226
+
+ Other effects
+
+  Pure natural IE   -0.006      -0.004      -0.002       0.006       0.013       0.015       0.017
+  Tot natural DE    -0.038      -0.026      -0.016       0.040       0.118       0.146       0.176
+  Total effect      -0.032      -0.020      -0.011       0.046       0.125       0.147       0.181
+
+ Odds ratios for other effects for binary Y
+
+  Pure natural IE    0.968       0.982       0.987       1.030       1.070       1.079       1.092
+  Tot natural DE     0.814       0.871       0.922       1.216       1.721       1.928       2.150
+  Total effect       0.837       0.897       0.944       1.253       1.759       1.955       2.226
+
+
+RESIDUAL OUTPUT
+
+
+     RESIDUALS ARE NOT AVAILABLE FOR THE CATEGORICAL VARIABLES.
+
+
+TECHNICAL 1 OUTPUT
+
+
+     PARAMETER SPECIFICATION
+
+
+           TAU
+              ECONF$1       INCNF$1
+              ________      ________
+                   11            12
+
+
+           NU
+              ECONF         INCNF         EDUCTF        DW11          DW13
+              ________      ________      ________      ________      ________
+                    0             0             0             0             0
+
+
+           NU
+              INT1          INT3          INTEM         INTEMW1       INTEMW3
+              ________      ________      ________      ________      ________
+                    0             0             0             0             0
+
+
+           LAMBDA
+              ECONF         INCNF         EDUCTF        DW11          DW13
+              ________      ________      ________      ________      ________
+ ECONF              0             0             0             0             0
+ INCNF              0             0             0             0             0
+ EDUCTF             0             0             0             0             0
+ DW11               0             0             0             0             0
+ DW13               0             0             0             0             0
+ INT1               0             0             0             0             0
+ INT3               0             0             0             0             0
+ INTEM              0             0             0             0             0
+ INTEMW1            0             0             0             0             0
+ INTEMW3            0             0             0             0             0
+
+
+           LAMBDA
+              INT1          INT3          INTEM         INTEMW1       INTEMW3
+              ________      ________      ________      ________      ________
+ ECONF              0             0             0             0             0
+ INCNF              0             0             0             0             0
+ EDUCTF             0             0             0             0             0
+ DW11               0             0             0             0             0
+ DW13               0             0             0             0             0
+ INT1               0             0             0             0             0
+ INT3               0             0             0             0             0
+ INTEM              0             0             0             0             0
+ INTEMW1            0             0             0             0             0
+ INTEMW3            0             0             0             0             0
+
+
+           THETA
+              ECONF         INCNF         EDUCTF        DW11          DW13
+              ________      ________      ________      ________      ________
+ ECONF              0
+ INCNF              0             0
+ EDUCTF             0             0             0
+ DW11               0             0             0             0
+ DW13               0             0             0             0             0
+ INT1               0             0             0             0             0
+ INT3               0             0             0             0             0
+ INTEM              0             0             0             0             0
+ INTEMW1            0             0             0             0             0
+ INTEMW3            0             0             0             0             0
+
+
+           THETA
+              INT1          INT3          INTEM         INTEMW1       INTEMW3
+              ________      ________      ________      ________      ________
+ INT1               0
+ INT3               0             0
+ INTEM              0             0             0
+ INTEMW1            0             0             0             0
+ INTEMW3            0             0             0             0             0
+
+
+           ALPHA
+              ECONF         INCNF         EDUCTF        DW11          DW13
+              ________      ________      ________      ________      ________
+                    0             0             0             0             0
+
+
+           ALPHA
+              INT1          INT3          INTEM         INTEMW1       INTEMW3
+              ________      ________      ________      ________      ________
+                    0             0             0             0             0
+
+
+           BETA
+              ECONF         INCNF         EDUCTF        DW11          DW13
+              ________      ________      ________      ________      ________
+ ECONF              0             1             2             3             4
+ INCNF              0             0            10             0             0
+ EDUCTF             0             0             0             0             0
+ DW11               0             0             0             0             0
+ DW13               0             0             0             0             0
+ INT1               0             0             0             0             0
+ INT3               0             0             0             0             0
+ INTEM              0             0             0             0             0
+ INTEMW1            0             0             0             0             0
+ INTEMW3            0             0             0             0             0
+
+
+           BETA
+              INT1          INT3          INTEM         INTEMW1       INTEMW3
+              ________      ________      ________      ________      ________
+ ECONF              5             6             7             8             9
+ INCNF              0             0             0             0             0
+ EDUCTF             0             0             0             0             0
+ DW11               0             0             0             0             0
+ DW13               0             0             0             0             0
+ INT1               0             0             0             0             0
+ INT3               0             0             0             0             0
+ INTEM              0             0             0             0             0
+ INTEMW1            0             0             0             0             0
+ INTEMW3            0             0             0             0             0
+
+
+           PSI
+              ECONF         INCNF         EDUCTF        DW11          DW13
+              ________      ________      ________      ________      ________
+ ECONF              0
+ INCNF              0             0
+ EDUCTF             0             0             0
+ DW11               0             0             0             0
+ DW13               0             0             0             0             0
+ INT1               0             0             0             0             0
+ INT3               0             0             0             0             0
+ INTEM              0             0             0             0             0
+ INTEMW1            0             0             0             0             0
+ INTEMW3            0             0             0             0             0
+
+
+           PSI
+              INT1          INT3          INTEM         INTEMW1       INTEMW3
+              ________      ________      ________      ________      ________
+ INT1               0
+ INT3               0             0
+ INTEM              0             0             0
+ INTEMW1            0             0             0             0
+ INTEMW3            0             0             0             0             0
+
+
+     PARAMETER SPECIFICATION FOR THE ADDITIONAL PARAMETERS
+
+
+           NEW/ADDITIONAL PARAMETERS
+              W1L           W3L           P_M0_X0       P_M1_X0       P_M0_X1
+              ________      ________      ________      ________      ________
+                   13            14            15            16            17
+
+
+           NEW/ADDITIONAL PARAMETERS
+              P_M1_X1       E_Y00_WL      E_Y01_WL      E_Y10_WL      E_Y11_WL
+              ________      ________      ________      ________      ________
+                   18            19            20            21            22
+
+
+           NEW/ADDITIONAL PARAMETERS
+              E_Y0M0_W      E_Y0M1_W      E_Y1M0_W      E_Y1M1_W      TNIE_WL
+              ________      ________      ________      ________      ________
+                   23            24            25            26            27
+
+
+           NEW/ADDITIONAL PARAMETERS
+              PNDE_WL       PNIE_WL       TNDE_WL       TE_WL         W1M
+              ________      ________      ________      ________      ________
+                   28            29            30            31            32
+
+
+           NEW/ADDITIONAL PARAMETERS
+              W3M           E_Y00_WM      E_Y01_WM      E_Y10_WM      E_Y11_WM
+              ________      ________      ________      ________      ________
+                   33            34            35            36            37
+
+
+           NEW/ADDITIONAL PARAMETERS
+              TNIE_WM       PNDE_WM       PNIE_WM       TNDE_WM       TE_WM
+              ________      ________      ________      ________      ________
+                   38            39            40            41            42
+
+
+           NEW/ADDITIONAL PARAMETERS
+              W1H           W3H           E_Y00_WH      E_Y01_WH      E_Y10_WH
+              ________      ________      ________      ________      ________
+                   43            44            45            46            47
+
+
+           NEW/ADDITIONAL PARAMETERS
+              E_Y11_WH      TNIE_WH       PNDE_WH       PNIE_WH       TNDE_WH
+              ________      ________      ________      ________      ________
+                   48            49            50            51            52
+
+
+           NEW/ADDITIONAL PARAMETERS
+              TE_WH         TNIE_DFL      PNDE_DFL      TNDE_DFL      PNIE_DFL
+              ________      ________      ________      ________      ________
+                   53            54            55            56            57
+
+
+           NEW/ADDITIONAL PARAMETERS
+              TE_DFL        TNIE_DFH      PNDE_DFH      TNDE_DFH      PNIE_DFH
+              ________      ________      ________      ________      ________
+                   58            59            60            61            62
+
+
+           NEW/ADDITIONAL PARAMETERS
+              TE_DFH
+              ________
+                   63            64            65            66            67
+
+
+           NEW/ADDITIONAL PARAMETERS
+                   68            69            70            71
+
+
+     STARTING VALUES
+
+
+           TAU
+              ECONF$1       INCNF$1
+              ________      ________
+                1.044         1.644
+
+
+           NU
+              ECONF         INCNF         EDUCTF        DW11          DW13
+              ________      ________      ________      ________      ________
+                0.000         0.000         0.000         0.000         0.000
+
+
+           NU
+              INT1          INT3          INTEM         INTEMW1       INTEMW3
+              ________      ________      ________      ________      ________
+                0.000         0.000         0.000         0.000         0.000
+
+
+           LAMBDA
+              ECONF         INCNF         EDUCTF        DW11          DW13
+              ________      ________      ________      ________      ________
+ ECONF          1.000         0.000         0.000         0.000         0.000
+ INCNF          0.000         1.000         0.000         0.000         0.000
+ EDUCTF         0.000         0.000         1.000         0.000         0.000
+ DW11           0.000         0.000         0.000         1.000         0.000
+ DW13           0.000         0.000         0.000         0.000         1.000
+ INT1           0.000         0.000         0.000         0.000         0.000
+ INT3           0.000         0.000         0.000         0.000         0.000
+ INTEM          0.000         0.000         0.000         0.000         0.000
+ INTEMW1        0.000         0.000         0.000         0.000         0.000
+ INTEMW3        0.000         0.000         0.000         0.000         0.000
+
+
+           LAMBDA
+              INT1          INT3          INTEM         INTEMW1       INTEMW3
+              ________      ________      ________      ________      ________
+ ECONF          0.000         0.000         0.000         0.000         0.000
+ INCNF          0.000         0.000         0.000         0.000         0.000
+ EDUCTF         0.000         0.000         0.000         0.000         0.000
+ DW11           0.000         0.000         0.000         0.000         0.000
+ DW13           0.000         0.000         0.000         0.000         0.000
+ INT1           1.000         0.000         0.000         0.000         0.000
+ INT3           0.000         1.000         0.000         0.000         0.000
+ INTEM          0.000         0.000         1.000         0.000         0.000
+ INTEMW1        0.000         0.000         0.000         1.000         0.000
+ INTEMW3        0.000         0.000         0.000         0.000         1.000
+
+
+           THETA
+              ECONF         INCNF         EDUCTF        DW11          DW13
+              ________      ________      ________      ________      ________
+ ECONF          0.000
+ INCNF          0.000         0.000
+ EDUCTF         0.000         0.000         0.000
+ DW11           0.000         0.000         0.000         0.000
+ DW13           0.000         0.000         0.000         0.000         0.000
+ INT1           0.000         0.000         0.000         0.000         0.000
+ INT3           0.000         0.000         0.000         0.000         0.000
+ INTEM          0.000         0.000         0.000         0.000         0.000
+ INTEMW1        0.000         0.000         0.000         0.000         0.000
+ INTEMW3        0.000         0.000         0.000         0.000         0.000
+
+
+           THETA
+              INT1          INT3          INTEM         INTEMW1       INTEMW3
+              ________      ________      ________      ________      ________
+ INT1           0.000
+ INT3           0.000         0.000
+ INTEM          0.000         0.000         0.000
+ INTEMW1        0.000         0.000         0.000         0.000
+ INTEMW3        0.000         0.000         0.000         0.000         0.000
+
+
+           ALPHA
+              ECONF         INCNF         EDUCTF        DW11          DW13
+              ________      ________      ________      ________      ________
+                0.000         0.000         0.000         0.000         0.000
+
+
+           ALPHA
+              INT1          INT3          INTEM         INTEMW1       INTEMW3
+              ________      ________      ________      ________      ________
+                0.000         0.000         0.000         0.000         0.000
+
+
+           BETA
+              ECONF         INCNF         EDUCTF        DW11          DW13
+              ________      ________      ________      ________      ________
+ ECONF          0.000         0.000         0.000         0.000         0.000
+ INCNF          0.000         0.000         0.000         0.000         0.000
+ EDUCTF         0.000         0.000         0.000         0.000         0.000
+ DW11           0.000         0.000         0.000         0.000         0.000
+ DW13           0.000         0.000         0.000         0.000         0.000
+ INT1           0.000         0.000         0.000         0.000         0.000
+ INT3           0.000         0.000         0.000         0.000         0.000
+ INTEM          0.000         0.000         0.000         0.000         0.000
+ INTEMW1        0.000         0.000         0.000         0.000         0.000
+ INTEMW3        0.000         0.000         0.000         0.000         0.000
+
+
+           BETA
+              INT1          INT3          INTEM         INTEMW1       INTEMW3
+              ________      ________      ________      ________      ________
+ ECONF          0.000         0.000         0.000         0.000         0.000
+ INCNF          0.000         0.000         0.000         0.000         0.000
+ EDUCTF         0.000         0.000         0.000         0.000         0.000
+ DW11           0.000         0.000         0.000         0.000         0.000
+ DW13           0.000         0.000         0.000         0.000         0.000
+ INT1           0.000         0.000         0.000         0.000         0.000
+ INT3           0.000         0.000         0.000         0.000         0.000
+ INTEM          0.000         0.000         0.000         0.000         0.000
+ INTEMW1        0.000         0.000         0.000         0.000         0.000
+ INTEMW3        0.000         0.000         0.000         0.000         0.000
+
+
+           PSI
+              ECONF         INCNF         EDUCTF        DW11          DW13
+              ________      ________      ________      ________      ________
+ ECONF          1.000
+ INCNF          0.000         1.000
+ EDUCTF         0.000         0.000         0.019
+ DW11           0.000         0.000         0.000         0.116
+ DW13           0.000         0.000         0.000         0.000         0.054
+ INT1           0.000         0.000         0.000         0.000         0.000
+ INT3           0.000         0.000         0.000         0.000         0.000
+ INTEM          0.000         0.000         0.000         0.000         0.000
+ INTEMW1        0.000         0.000         0.000         0.000         0.000
+ INTEMW3        0.000         0.000         0.000         0.000         0.000
+
+
+           PSI
+              INT1          INT3          INTEM         INTEMW1       INTEMW3
+              ________      ________      ________      ________      ________
+ INT1           0.031
+ INT3           0.000         0.009
+ INTEM          0.000         0.000         0.002
+ INTEMW1        0.000         0.000         0.000         0.001
+ INTEMW3        0.000         0.000         0.000         0.000         0.000
+
+
+     STARTING VALUES FOR THE ADDITIONAL PARAMETERS
+
+
+           NEW/ADDITIONAL PARAMETERS
+              W1L           W3L           P_M0_X0       P_M1_X0       P_M0_X1
+              ________      ________      ________      ________      ________
+                0.500         0.500         0.500         0.500         0.500
+
+
+           NEW/ADDITIONAL PARAMETERS
+              P_M1_X1       E_Y00_WL      E_Y01_WL      E_Y10_WL      E_Y11_WL
+              ________      ________      ________      ________      ________
+                0.500         0.500         0.500         0.500         0.500
+
+
+           NEW/ADDITIONAL PARAMETERS
+              E_Y0M0_W      E_Y0M1_W      E_Y1M0_W      E_Y1M1_W      TNIE_WL
+              ________      ________      ________      ________      ________
+                0.500         0.500         0.500         0.500         0.500
+
+
+           NEW/ADDITIONAL PARAMETERS
+              PNDE_WL       PNIE_WL       TNDE_WL       TE_WL         W1M
+              ________      ________      ________      ________      ________
+                0.500         0.500         0.500         0.500         0.500
+
+
+           NEW/ADDITIONAL PARAMETERS
+              W3M           E_Y00_WM      E_Y01_WM      E_Y10_WM      E_Y11_WM
+              ________      ________      ________      ________      ________
+                0.500         0.500         0.500         0.500         0.500
+
+
+           NEW/ADDITIONAL PARAMETERS
+              TNIE_WM       PNDE_WM       PNIE_WM       TNDE_WM       TE_WM
+              ________      ________      ________      ________      ________
+                0.500         0.500         0.500         0.500         0.500
+
+
+           NEW/ADDITIONAL PARAMETERS
+              W1H           W3H           E_Y00_WH      E_Y01_WH      E_Y10_WH
+              ________      ________      ________      ________      ________
+                0.500         0.500         0.500         0.500         0.500
+
+
+           NEW/ADDITIONAL PARAMETERS
+              E_Y11_WH      TNIE_WH       PNDE_WH       PNIE_WH       TNDE_WH
+              ________      ________      ________      ________      ________
+                0.500         0.500         0.500         0.500         0.500
+
+
+           NEW/ADDITIONAL PARAMETERS
+              TE_WH         TNIE_DFL      PNDE_DFL      TNDE_DFL      PNIE_DFL
+              ________      ________      ________      ________      ________
+                0.500         0.500         0.500         0.500         0.500
+
+
+           NEW/ADDITIONAL PARAMETERS
+              TE_DFL        TNIE_DFH      PNDE_DFH      TNDE_DFH      PNIE_DFH
+              ________      ________      ________      ________      ________
+                0.500         0.500         0.500         0.500         0.500
+
+
+           NEW/ADDITIONAL PARAMETERS
+              TE_DFH
+              ________
+                0.500         0.500         0.500         0.500         0.500
+
+
+           NEW/ADDITIONAL PARAMETERS
+                0.500         0.500         0.500         0.500
+
+
+TECHNICAL 4 OUTPUT
+
+
+     TECHNICAL 4 OUTPUT IS NOT AVAILABLE FOR THIS MODEL.
+
+
+TECHNICAL 10 OUTPUT
+
+
+     TECH10 OUTPUT FOR CATEGORICAL VARIABLES IS NOT AVAILABLE FOR MODELS WITH COVARIATES.
+
+
+TECHNICAL 8 OUTPUT
+
+
+   E STEP  ITER  LOGLIKELIHOOD    ABS CHANGE   REL CHANGE  ALGORITHM
+              1 -0.91757106D+04    0.0000000    0.0000000  EM
+              2 -0.91009623D+04   74.7482851    0.0081463  EM
+              3 -0.91003621D+04    0.6002444    0.0000660  EM
+              4 -0.91003620D+04    0.0000738    0.0000000  EM
+
+
+DIAGRAM INFORMATION
+
+  Use View Diagram under the Diagram menu in the Mplus Editor to view the diagram.
+  If running Mplus from the Mplus Diagrammer, the diagram opens automatically.
+
+  Diagram output
+    c:\users\lzhs\desktop\markdown_latex\rmarkdown\bookdown\test_bookdown_new\20230927 lta\interge_rela\result_mod_media
+
+     Beginning Time:  17:28:07
+        Ending Time:  17:29:03
+       Elapsed Time:  00:00:56
+
+
+
+MUTHEN & MUTHEN
+3463 Stoner Ave.
+Los Angeles, CA  90066
+
+Tel: (310) 391-9971
+Fax: (310) 391-8971
+Web: www.StatModel.com
+Support: Support@StatModel.com
+
+Copyright (c) 1998-2024 Muthen & Muthen
