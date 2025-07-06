@@ -1,0 +1,2968 @@
+Mplus VERSION 8.11
+MUTHEN & MUTHEN
+07/06/2025   2:41 PM
+
+INPUT INSTRUCTIONS
+
+
+
+  TITLE:
+  Mod_apimem_total_siops-incc-sib1-op_step1
+  DATA:
+  FILE = "apim.sd.dat";
+
+  VARIABLE:
+  NAMES = cid clof ecof hgf opf op5f agef eduf siopsf inccf hwf sexf dwf dwf_1 dwf_2
+       dwf_3 dw1f agf sibf sibf_1 sibf_2 sibf_3 hkf prtagef prtsexf prtmarrf prteduf
+       prteduf1 prteduf2 prteduf3 prthkf prtcorf prtptf prtcdnf hwcf jobcf fczf respf
+       childn clom ecom hgm opm op5m agem edum siopsm inccm hwm sexm dwm dwm_1 dwm_2
+       dwm_3 dw1m agm sibm sibm_1 sibm_2 sibm_3 hkm prtagem prtsexm prtmarrm prtedum
+       prtedum1 prtedum2 prtedum3 prthkm prtcorm prtptm prtcdnm hwcm jobcm fczm respm
+       fincc urban prov prov_1 prov_2 prov_3 year year_1 year_2 year_3 year_4 educ
+       agec siopsc clof_sd ecof_sd hgf_sd opf_sd op5f_sd agef_sd eduf_sd siopf_sd
+       inccf_sd hwf_sd child_sd agf_sd fincc_sd clom_sd ecom_sd hgm_sd opm_sd op5m_sd
+       agem_sd edum_sd siopm_sd inccm_sd hwm_sd agm_sd clof_ct ecof_ct hgf_ct opf_ct
+       op5f_ct agef_ct eduf_ct siopf_ct inccf_ct hwf_ct child_ct agf_ct fincc_ct
+       clom_ct ecom_ct hgm_ct opm_ct op5m_ct agem_ct edum_ct siopm_ct inccm_ct hwm_ct
+       agm_ct lifetime;
+  MISSING=.;
+
+   usevar =
+  op5f  !!! within-dv-vars of female
+  agef_sd eduf_sd siopf_sd !!! within-iv-vars of female
+  inccf_sd
+  hwf_sd
+  dw1f
+  agf_sd
+  sibf_1 sibf_3
+  hkf  !!! within-covars of female
+  prtagef prtsexf prtmarrf prteduf1 prthkf prtptf
+  !hwcf jobcf fczf respf
+  child_sd !!! between-iv-vars for couple
+  fincc_sd urban prov_1 year_2 year_3 year_4 lifetime !!! between-covars for couple
+  op5m  !!! within-dv-vars of male
+  agem_sd edum_sd siopm_sd !!! within-iv-vars of male
+  inccm_sd
+  hwm_sd
+  dw1m
+  agm_sd
+  sibm_1 sibm_3
+  hkm  !!! within-covars of female
+  prtagem prtsexm prtmarrm prtedum1 prthkm prtptm
+  !hwcm jobcm fczm respm
+  intmm1 intmm3
+  intmf1 intmf3
+  intff1 intff3
+  intfm1 intfm3
+  ;
+  !!! childn is between dydas var, sexf and else are within dydas vars !!!
+
+
+  DEFINE:
+  !!! Note that independent variables are centered around a common mean for both roles
+  !!! (i.e., grand mean centering).
+  !!! (Kenny et al., 2006.pp110,78; Garcia et al., 2015; Stas et al., 2018)
+  ! center inccm inccf agm agf(grandmean);
+
+  intmm1 = inccm_sd*sibm_1;
+  intmm3 = inccm_sd*sibm_3;
+
+  intmf1 = inccm_sd*sibf_1;
+  intmf3 = inccm_sd*sibf_3;
+
+  intff1 = inccf_sd*sibf_1;
+  intff3 = inccf_sd*sibf_3;
+
+  intfm1 = inccf_sd*sibm_1;
+  intfm3 = inccf_sd*sibm_3;
+
+  ANALYSIS:
+  processor = 10;
+  estimator = ML;
+  bootstrap = 1000;
+
+  MODEL:
+
+  !!! Outcomes var on mediators + IVs
+  ! For male
+  op5m on inccm_sd(b_A1);  !!! mediators and path b
+  op5m on inccf_sd(b_P1);  !!! mediators and path b
+  op5m on siopm_sd(c_dashA1);  !!! IV and path c'
+  op5m on siopf_sd(c_dashP1);  !!! iv and path c'
+
+  ! For female
+  op5f on inccm_sd(b_P2);  !!! mediators and path b
+  op5f on inccf_sd(b_A2);  !!! mediators and path b
+  op5f on siopm_sd(c_dashP2);  !!! IV and path c'
+  op5f on siopf_sd(c_dashA2);  !!! iv and path c'
+
+  !!! Mediator on + IVs
+  ! For male
+  [inccm_sd](a0m);
+  inccm_sd on siopm_sd(a_A1); ! male mediators on IVs: actor effect
+  inccm_sd on siopf_sd(a_P1); ! male mediators on IVs: partner effect
+
+  ! For female
+  [inccf_sd](a0f);
+  inccf_sd on siopf_sd(a_A2); ! female mediators on IVs: actor effect
+  inccf_sd on siopm_sd(a_P2); ! female mediators on IVs: partner effect
+
+
+  !!! Moderation on b path
+  ! For male
+  [op5m](b0m);
+  op5m on sibm_1(am11);  ! actor main-effect for male
+  op5m on sibm_3(am13);  ! actor main-effect for male
+  op5m on intmm1(aam11);  ! actor actor-effect(interation) for male
+  op5m on intmm3(aam13);  ! actor actor-effect(interation) for male
+  op5m on intfm1(pam11);  ! partner actor-effect(interation) for male
+  op5m on intfm3(pam13);  ! partner actor-effect(interation) for male
+
+  ! For female
+  [op5f](b0f);
+  op5f on sibf_1(am21);  ! actor main-effect for female
+  op5f on sibf_3(am23);  ! actor main-effect for female
+  op5f on intff1(aam21);  ! actor actor-effect(interation) for female
+  op5f on intff3(aam23);  ! actor actor-effect(interation) for female
+  op5f on intmf1(pam21);  ! partner actor-effect(interation) for female
+  op5f on intmf3(pam23);  ! partner actor-effect(interation) for female
+
+
+  ! Covariances between IVs and covariance between DVs
+  op5m WITH op5f;  ! dv covariance
+  siopm_sd WITH siopf_sd;  ! iv variance
+  !inccm WITH inccf;
+
+  ! Covariances between IVs, moderation vars, interaction items, and covariance between DVs
+  !clom WITH clof; ! covariance
+  inccm_sd inccf_sd WITH inccm_sd inccf_sd;  ! mv variance
+  intmm1 intfm1 intff1 intmf1 sibm_1 sibf_1 intmm3 intfm3 intff3 intmf3 sibm_3 sibf_3
+  WITH
+  intmm1 intfm1 intff1 intmf1 sibm_1 sibf_1 intmm3 intfm3 intff3 intmf3 sibm_3 sibf_3;
+
+
+  !!! Add covariates for Outcomes var, childn is between-dyad, else are mixed-dyad
+  ! control for DV-men's covariates, If you want to control for both actor and partner
+  ! effects of a certain covariate variables, the covariates should be add as a second
+  ! independent variable with both actor and partner effects.
+
+  ! For male
+  op5m on agem_sd edum_sd;  ! else predictor as covariates
+
+  op5m on hwm_sd;  ! else mediator as covariates
+
+  op5m on agm_sd child_sd dw1m;  ! else moderator as covariates
+
+  ! For female
+  op5f on agef_sd eduf_sd;  ! else predictor as covariates
+
+  op5f on hwf_sd;  ! else mediator as covariates
+
+  op5f on agf_sd child_sd dw1f;  ! else moderator as covariates
+
+
+  !!! Outcomes var on Covars
+  ! For male
+  op5m on hkm;
+  !op5m on prtagem prtsexm prtmarrm prtedum2 prtedum3 prthkm prtcorm prtptm;
+  op5m on prtagem prtsexm prtmarrm prtedum1 prthkm prtptm;
+
+
+  !op5m on hwcm jobcm fczm respm;
+  op5m on fincc_sd urban prov_1 year_2 year_3 year_4 lifetime;
+
+  ! For female
+  op5f on hkf;
+  !op5f on prtagef prtsexf prtmarrf prteduf2 prteduf3 prthkf prtcorf prtptf;
+  op5f on prtagef prtsexf prtmarrf prteduf1 prthkf prtptf;
+
+
+  !op5f on hwcf jobcf fczf respf;
+  op5f on fincc_sd urban prov_1 year_2 year_3 year_4 lifetime;
+
+
+
+  ! Add covariates for Mediator
+
+
+
+  ! For male
+  inccm_sd on edum_sd agem_sd; ! control for MedV-men's covariates
+
+  ! For female
+  inccf_sd on eduf_sd agef_sd; ! control for MedV-women's covariates
+
+  !!! Mediator var on Covars
+  ! For male
+  inccm_sd on hkm;
+  !inccm_sd on hwcm jobcm fczm respm;
+  !inccm_sd on hwcm jobcm;
+  !inccm_sd on fincc_sd urban prov_1 prov_3 year_2 year_3 year_4 lifetime;
+  inccm_sd on year_2 year_3 year_4;
+
+  ! For female
+  inccf_sd on hkf;
+  !inccf_sd on hwcf jobcf fczf respf;
+  !inccf_sd on hwcf jobcf;
+  !inccf_sd on fincc_sd urban prov_1 prov_3 year_2 year_3 year_4 lifetime;
+  inccf_sd on year_2 year_3 year_4;
+
+  ! Covariances of covariates
+  !intf agef_sd eduf_sd siopf_sd inccf_sd hwf_sd dw1f agf_sd child_sd
+  !intm agem_sd edum_sd siopm_sd inccm_sd hwm_sd dw1m agm_sd
+  !hkm hwcm jobcm fczm respm
+  !hkf hwcf jobcf fczf respf
+  !fincc_sd urban prov_1 prov_3
+  !WITH
+  !intf agef_sd eduf_sd siopf_sd inccf_sd hwf_sd dw1f agf_sd child_sd
+  !intm agem_sd edum_sd siopm_sd inccm_sd hwm_sd dw1m agm_sd
+  !hkm hwcm jobcm fczm respm
+  !hkf hwcf jobcf fczf respf
+  !fincc_sd urban prov_1 prov_3;
+
+  ! Covariances of covariates
+  agef_sd eduf_sd siopf_sd PWITH agem_sd edum_sd siopm_sd;
+  inccf_sd hwf_sd dw1f agf_sd PWITH inccm_sd hwm_sd dw1m agm_sd;
+  hkf PWITH hkm;
+  !prtagef prtmarrf PWITH prtagem prtmarrm;
+  !prteduf2 prteduf3 prthkf prtcorf prtptf PWITH prtedum2 prtedum3 prthkm prtcorm prtptm;
+  !hwcf jobcf PWITH hwcm jobcm;
+
+  !*
+  Model Indirect:
+  ! For male
+  ! one indirect path: Xm-Mm-Ym(actor-actor-effect for male, a_A1b_A1)
+  op5m IND siopm_sd;
+  ! one indirect path: Xf-Mf-Ym(actor-partner-effect for male, a_A2b_P1)
+  op5m IND siopf_sd;
+
+  ! For female
+  ! one indirect path: Xf-Mf-Yf(actor-actor-effect for female, a_A2b_A2)
+  op5f IND siopf_sd;
+  ! one indirect path: Xm-Mm-Yf(actor-partner-effect for female, a_A1b_P2)
+  op5f IND siopm_sd;
+  *!
+
+
+  MODEL CONSTRAINT:
+
+
+
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!!!!!!!!!!!!!!!!! Calculate IMM & Simple slope !!!!!!!!!!!!!!!!!!!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  NEW(
+
+  hiW1m medW1m loW1m
+  hiW3m medW3m loW3m
+
+  hiW1f medW1f loW1f
+  hiW3f medW3f loW3f
+
+  );
+
+
+  ! Specifing moderator level for male
+  hiW1m = 1;
+  medW1m = 0;
+  loW1m = 0;
+
+  hiW3m = 1;
+  medW3m = 0;
+  loW3m = 0;
+
+  ! Specifing moderator level for female
+  hiW1f = 1;
+  medW1f = 0;
+  loW1f = 0;
+
+  hiW3f = 1;
+  medW3f = 0;
+  loW3f = 0;
+  !!! Xm/Xf as focal antecedent variable
+  ! Calc conditional indirect effects for each combination of moderator values
+  ! and index/indices of moderated mediation
+
+
+  !!! Actor mediation start
+  !!! Partner mediation start
+
+  !!! aam1
+  ! IE of Xm Mm Wm Ym, conditional on Wm: (b_A1*a_A1 + aam11*a_A1*W1m + aam13*a_A1*W3m)*Xm
+  ! IE of Xf Mm Wm Ym, conditional on Wm: (b_A1*a_P1 + aam11*a_P1*W1m + aam13*a_P1*W3m)*Xf
+
+  !!! pam1
+  ! IE of Xf Mf Wm Ym, conditional on Wm: (b_P1*a_A2 + pam11*a_A2*W1m + pam13*a_A2*W3m)*Xf
+  ! IE of Xm Mf Wm Ym, conditional on Wm: (b_P1*a_P2 + pam11*a_P2*W1m + pam13*a_P2*W3m)*Xm
+
+  !!! aam2
+  ! IE of Xf Mf Wf Yf, conditional on Wf: (b_A2*a_A2 + aam21*a_A2*W1f + aam23*a_A2*W3f)*Xf
+  ! IE of Xm Mf Wf Yf, conditional on Wf: (b_A2*a_P2 + aam21*a_P2*W1f + aam23*a_P2*W3f)*Xm
+
+  !!! pam2
+  ! IE of Xm Mm Wf Yf, conditional on Wf: (b_P2*a_A1 + pam21*a_A1*W1f + pam23*a_A1*W3f)*Xm
+  ! IE of Xf Mm Wf Yf, conditional on Wf: (b_P2*a_P1 + pam21*a_P1*W1f + pam23*a_P1*W3f)*Xf
+
+
+  !!! Actor mediation start
+  NEW(
+
+  hi0aam1 med0aam1 lo0aam1
+  im0aam11 im0aam12 im0aam13
+
+  hi0pam1 med0pam1 lo0pam1
+  im0pam11 im0pam12 im0pam13
+
+  hi0aam2 med0aam2 lo0aam2
+  im0aam21 im0aam22 im0aam23
+
+  hi0pam2 med0pam2 lo0pam2
+  im0pam21 im0pam22 im0pam23
+
+  );
+
+  ! IE of Xm Mm Wm Ym, conditional on Wm: (b_A1*a_A1 + aam1*a_A1*Wm)*Xm
+  hi0aam1 = b_A1*a_A1 + aam11*a_A1*hiW1m + aam13*a_A1*loW3m;
+  med0aam1 = b_A1*a_A1 + aam11*a_A1*medW1m + aam13*a_A1*medW3m;
+  lo0aam1 = b_A1*a_A1 + aam11*a_A1*loW1m + aam13*a_A1*hiW3m;
+
+  im0aam11 =  aam11*a_A1; ! Indices moderated mediation
+  im0aam12 =  aam11*a_A1*medW1m + aam13*a_A1*medW3m; ! Indices moderated mediation
+  im0aam13 =  aam13*a_A1; ! Indices moderated mediation
+
+  ! IE of Xf Mf Wm Ym, conditional on Wm: (b_P1*a_A2 + pam1*a_A2*Wm)*Xf
+  hi0pam1 = b_P1*a_A2 + pam11*a_A2*hiW1m + pam13*a_A2*loW3m;
+  med0pam1 = b_P1*a_A2 + pam11*a_A2*medW1m + pam13*a_A2*medW3m;
+  lo0pam1 = b_P1*a_A2 + pam11*a_A2*loW1m + pam13*a_A2*hiW3m;
+
+  im0pam11 =  pam11*a_A2; ! Indices moderated mediation
+  im0pam12 =  pam11*a_A2*medW1m + pam13*a_A2*medW3m; ! Indices moderated mediation
+  im0pam13 =  pam13*a_A2; ! Indices moderated mediation
+
+  ! IE of Xf Mf Wf Yf, conditional on Wf: (b_A2*a_A2 + aam2*a_A2*Wf)*Xf
+  hi0aam2 = b_A2*a_A2 + aam21*a_A2*hiW1f + aam23*a_A2*loW3f;
+  med0aam2 = b_A2*a_A2 + aam21*a_A2*medW1f + aam23*a_A2*medW3f;
+  lo0aam2 = b_A2*a_A2 + aam21*a_A2*loW1f + aam23*a_A2*hiW3f;
+
+  im0aam21 =  aam21*a_A2; ! Indices moderated mediation
+  im0aam22 =  aam21*a_A2*medW1f + aam23*a_A2*medW3f; ! Indices moderated mediation
+  im0aam23 =  aam23*a_A2; ! Indices moderated mediation
+
+  ! IE of Xm Mm Wf Yf, conditional on Wf: (b_P2*a_A1 + pam2*a_A1*Wf)*Xm
+  hi0pam2 = b_P2*a_A1 + pam21*a_A1*hiW1f + pam23*a_A1*loW3f;
+  med0pam2 = b_P2*a_A1 + pam21*a_A1*medW1f + pam23*a_A1*medW3f;
+  lo0pam2 = b_P2*a_A1 + pam21*a_A1*loW1f + pam23*a_A1*hiW3f;
+
+  im0pam21 =  pam21*a_A1; ! Indices moderated mediation
+  im0pam22 =  pam21*a_A1*medW1f + pam23*a_A1*medW3f; ! Indices moderated mediation
+  im0pam23 =  pam23*a_A1; ! Indices moderated mediation
+
+
+  ! TNIE different test
+
+  NEW(
+
+  TIE0aam1 TIE0pam1 TIE0aam2 TIE0pam2
+
+  );
+
+  TIE0aam1 = hi0aam1-lo0aam1;
+  TIE0pam1 = hi0pam1-lo0pam1;
+  TIE0aam2 = hi0aam2-lo0aam2;
+  TIE0pam2 = hi0pam2-lo0pam2;
+
+
+
+
+  !!! Partner mediation start
+
+  NEW(
+
+  hi1aam1 med1aam1 lo1aam1
+  im1aam11 im1aam12 im1aam13
+
+  hi1pam1 med1pam1 lo1pam1
+  im1pam11 im1pam12 im1pam13
+
+  hi1aam2 med1aam2 lo1aam2
+  im1aam21 im1aam22 im1aam23
+
+  hi1pam2 med1pam2 lo1pam2
+  im1pam21 im1pam22 im1pam23
+
+  );
+
+  ! IE of Xf Mm Wm Ym, conditional on Wm: (b_A1*a_P1 + aam1*a_P1*Wm)*Xf
+  hi1aam1 = b_A1*a_P1 + aam11*a_P1*hiW1m + aam13*a_P1*loW3m;
+  med1aam1 = b_A1*a_P1 + aam11*a_P1*medW1m + aam13*a_P1*medW3m;
+  lo1aam1 = b_A1*a_P1 + aam11*a_P1*loW1m + aam13*a_P1*hiW3m;
+
+  im1aam11 =  aam11*a_P1; ! Indices moderated mediation
+  im1aam12 =  aam11*a_P1*medW1m + aam13*a_P1*medW3m; ! Indices moderated mediation
+  im1aam13 =  aam13*a_P1; ! Indices moderated mediation
+
+  ! IE of Xm Mf Wm Ym, conditional on Wm: (b_P1*a_P2 + pam1*a_P2*Wm)*Xm
+  hi1pam1 = b_P1*a_P2 + pam11*a_P2*hiW1m + pam13*a_P2*loW3m;
+  med1pam1 = b_P1*a_P2 + pam11*a_P2*medW1m + pam13*a_P2*medW3m;
+  lo1pam1 = b_P1*a_P2 + pam11*a_P2*loW1m + pam13*a_P2*hiW3m;
+
+  im1pam11 =  pam11*a_P2; ! Indices moderated mediation
+  im1pam12 =  pam11*a_P2*medW1m + pam13*a_P2*medW3m; ! Indices moderated mediation
+  im1pam13 =  pam13*a_P2; ! Indices moderated mediation
+
+  ! IE of Xm Mf Wf Yf, conditional on Wf: (b_A2*a_P2 + aam2*a_P2*Wf)*Xm
+  hi1aam2 = b_A2*a_P2 + aam21*a_P2*hiW1f + aam23*a_P2*loW3f;
+  med1aam2 = b_A2*a_P2 + aam21*a_P2*medW1f + aam23*a_P2*medW3f;
+  lo1aam2 = b_A2*a_P2 + aam21*a_P2*loW1f + aam23*a_P2*hiW3f;
+
+  im1aam21 =  aam21*a_P2; ! Indices moderated mediation
+  im1aam22 =  aam21*a_P2*medW1f + aam23*a_P2*medW3f; ! Indices moderated mediation
+  im1aam23 =  aam23*a_P2; ! Indices moderated mediation
+
+  ! IE of Xf Mm Wf Yf, conditional on Wf: (b_P2*a_P1 + pam2*a_P1*Wf)*Xf
+  hi1pam2 = b_P2*a_P1 + pam21*a_P1*hiW1f + pam23*a_P1*loW3f;
+  med1pam2 = b_P2*a_P1 + pam21*a_P1*medW1f + pam23*a_P1*medW3f;
+  lo1pam2 = b_P2*a_P1 + pam21*a_P1*loW1f + pam23*a_P1*hiW3f;
+
+  im1pam21 =  pam21*a_P1; ! Indices moderated mediation
+  im1pam22 =  pam21*a_P1*medW1f + pam23*a_P1*medW3f; ! Indices moderated mediation
+  im1pam23 =  pam23*a_P1; ! Indices moderated mediation
+
+  ! TNIE different test
+
+  NEW(
+
+  TIE1aam1 TIE1pam1 TIE1aam2 TIE1pam2
+
+  );
+
+  TIE1aam1 = hi1aam1-lo1aam1;
+  TIE1pam1 = hi1pam1-lo1pam1;
+  TIE1aam2 = hi1aam2-lo1aam2;
+  TIE1pam2 = hi1pam2-lo1pam2;
+
+
+
+  OUTPUT:
+  !sampstat residual stdyx MODINDICES CINTERVAL(bcbootstrap);
+  sampstat MODINDICES CINTERVAL(bcbootstrap);
+  ! bias-corrected bootstrap confidence intervals; With frequentist estimation,
+  ! only SYMMETRIC confidence intervals are available for standardized parameter estimates.
+
+  !PLOT:
+  !Type = plot3; !!! shows scatter plots and histograms (e.g., residuals)
+  !Outliers = loglikelihood influence cooks;
+  ! identifying potential outliers and influential observations
+
+
+
+
+*** WARNING in OUTPUT command
+  MODINDICES option is not available with BOOTSTRAP.
+  Request for MODINDICES is ignored.
+   1 WARNING(S) FOUND IN THE INPUT INSTRUCTIONS
+
+
+
+
+Mod_apimem_total_siops-incc-sib1-op_step1
+
+SUMMARY OF ANALYSIS
+
+Number of groups                                                 1
+Number of observations                                        9028
+
+Number of dependent variables                                    4
+Number of independent variables                                 46
+Number of continuous latent variables                            0
+
+Observed dependent variables
+
+  Continuous
+   OP5F        INCCF_SD    OP5M        INCCM_SD
+
+Observed independent variables
+   AGEF_SD     EDUF_SD     SIOPF_SD    HWF_SD      DW1F        AGF_SD
+   SIBF_1      SIBF_3      HKF         PRTAGEF     PRTSEXF     PRTMARRF
+   PRTEDUF1    PRTHKF      PRTPTF      CHILD_SD    FINCC_SD    URBAN
+   PROV_1      YEAR_2      YEAR_3      YEAR_4      LIFETIME    AGEM_SD
+   EDUM_SD     SIOPM_SD    HWM_SD      DW1M        AGM_SD      SIBM_1
+   SIBM_3      HKM         PRTAGEM     PRTSEXM     PRTMARRM    PRTEDUM1
+   PRTHKM      PRTPTM      INTMM1      INTMM3      INTMF1      INTMF3
+   INTFF1      INTFF3      INTFM1      INTFM3
+
+
+Estimator                                                       ML
+Information matrix                                        OBSERVED
+Maximum number of iterations                                  1000
+Convergence criterion                                    0.500D-04
+Maximum number of steepest descent iterations                   20
+Maximum number of iterations for H1                           2000
+Convergence criterion for H1                             0.100D-03
+Number of bootstrap draws
+    Requested                                                 1000
+    Completed                                                 1000
+
+Input data file(s)
+  apim.sd.dat
+
+Input data format  FREE
+
+
+SUMMARY OF DATA
+
+     Number of missing data patterns             2
+
+
+COVARIANCE COVERAGE OF DATA
+
+Minimum covariance coverage value   0.100
+
+
+     PROPORTION OF DATA PRESENT
+
+
+           Covariance Coverage
+              OP5F          INCCF_SD      OP5M          INCCM_SD      AGEF_SD
+              ________      ________      ________      ________      ________
+ OP5F           1.000
+ INCCF_SD       1.000         1.000
+ OP5M           1.000         1.000         1.000
+ INCCM_SD       1.000         1.000         1.000         1.000
+ AGEF_SD        1.000         1.000         1.000         1.000         1.000
+ EDUF_SD        1.000         1.000         1.000         1.000         1.000
+ SIOPF_SD       1.000         1.000         1.000         1.000         1.000
+ HWF_SD         1.000         1.000         1.000         1.000         1.000
+ DW1F           1.000         1.000         1.000         1.000         1.000
+ AGF_SD         1.000         1.000         1.000         1.000         1.000
+ SIBF_1         0.487         0.487         0.487         0.487         0.487
+ SIBF_3         0.487         0.487         0.487         0.487         0.487
+ HKF            1.000         1.000         1.000         1.000         1.000
+ AGEM_SD        1.000         1.000         1.000         1.000         1.000
+ EDUM_SD        1.000         1.000         1.000         1.000         1.000
+ SIOPM_SD       1.000         1.000         1.000         1.000         1.000
+ HWM_SD         1.000         1.000         1.000         1.000         1.000
+ DW1M           1.000         1.000         1.000         1.000         1.000
+ AGM_SD         1.000         1.000         1.000         1.000         1.000
+ SIBM_1         0.487         0.487         0.487         0.487         0.487
+ SIBM_3         0.487         0.487         0.487         0.487         0.487
+ HKM            1.000         1.000         1.000         1.000         1.000
+ INTMM1         0.487         0.487         0.487         0.487         0.487
+ INTMM3         0.487         0.487         0.487         0.487         0.487
+ INTMF1         0.487         0.487         0.487         0.487         0.487
+ INTMF3         0.487         0.487         0.487         0.487         0.487
+ INTFF1         0.487         0.487         0.487         0.487         0.487
+ INTFF3         0.487         0.487         0.487         0.487         0.487
+ INTFM1         0.487         0.487         0.487         0.487         0.487
+ INTFM3         0.487         0.487         0.487         0.487         0.487
+ PRTAGEF        1.000         1.000         1.000         1.000         1.000
+ PRTSEXF        1.000         1.000         1.000         1.000         1.000
+ PRTMARRF       1.000         1.000         1.000         1.000         1.000
+ PRTEDUF1       1.000         1.000         1.000         1.000         1.000
+ PRTHKF         1.000         1.000         1.000         1.000         1.000
+ PRTPTF         1.000         1.000         1.000         1.000         1.000
+ CHILD_SD       1.000         1.000         1.000         1.000         1.000
+ FINCC_SD       1.000         1.000         1.000         1.000         1.000
+ URBAN          1.000         1.000         1.000         1.000         1.000
+ PROV_1         1.000         1.000         1.000         1.000         1.000
+ YEAR_2         1.000         1.000         1.000         1.000         1.000
+ YEAR_3         1.000         1.000         1.000         1.000         1.000
+ YEAR_4         1.000         1.000         1.000         1.000         1.000
+ LIFETIME       1.000         1.000         1.000         1.000         1.000
+ PRTAGEM        1.000         1.000         1.000         1.000         1.000
+ PRTSEXM        1.000         1.000         1.000         1.000         1.000
+ PRTMARRM       1.000         1.000         1.000         1.000         1.000
+ PRTEDUM1       1.000         1.000         1.000         1.000         1.000
+ PRTHKM         1.000         1.000         1.000         1.000         1.000
+ PRTPTM         1.000         1.000         1.000         1.000         1.000
+
+
+           Covariance Coverage
+              EDUF_SD       SIOPF_SD      HWF_SD        DW1F          AGF_SD
+              ________      ________      ________      ________      ________
+ EDUF_SD        1.000
+ SIOPF_SD       1.000         1.000
+ HWF_SD         1.000         1.000         1.000
+ DW1F           1.000         1.000         1.000         1.000
+ AGF_SD         1.000         1.000         1.000         1.000         1.000
+ SIBF_1         0.487         0.487         0.487         0.487         0.487
+ SIBF_3         0.487         0.487         0.487         0.487         0.487
+ HKF            1.000         1.000         1.000         1.000         1.000
+ AGEM_SD        1.000         1.000         1.000         1.000         1.000
+ EDUM_SD        1.000         1.000         1.000         1.000         1.000
+ SIOPM_SD       1.000         1.000         1.000         1.000         1.000
+ HWM_SD         1.000         1.000         1.000         1.000         1.000
+ DW1M           1.000         1.000         1.000         1.000         1.000
+ AGM_SD         1.000         1.000         1.000         1.000         1.000
+ SIBM_1         0.487         0.487         0.487         0.487         0.487
+ SIBM_3         0.487         0.487         0.487         0.487         0.487
+ HKM            1.000         1.000         1.000         1.000         1.000
+ INTMM1         0.487         0.487         0.487         0.487         0.487
+ INTMM3         0.487         0.487         0.487         0.487         0.487
+ INTMF1         0.487         0.487         0.487         0.487         0.487
+ INTMF3         0.487         0.487         0.487         0.487         0.487
+ INTFF1         0.487         0.487         0.487         0.487         0.487
+ INTFF3         0.487         0.487         0.487         0.487         0.487
+ INTFM1         0.487         0.487         0.487         0.487         0.487
+ INTFM3         0.487         0.487         0.487         0.487         0.487
+ PRTAGEF        1.000         1.000         1.000         1.000         1.000
+ PRTSEXF        1.000         1.000         1.000         1.000         1.000
+ PRTMARRF       1.000         1.000         1.000         1.000         1.000
+ PRTEDUF1       1.000         1.000         1.000         1.000         1.000
+ PRTHKF         1.000         1.000         1.000         1.000         1.000
+ PRTPTF         1.000         1.000         1.000         1.000         1.000
+ CHILD_SD       1.000         1.000         1.000         1.000         1.000
+ FINCC_SD       1.000         1.000         1.000         1.000         1.000
+ URBAN          1.000         1.000         1.000         1.000         1.000
+ PROV_1         1.000         1.000         1.000         1.000         1.000
+ YEAR_2         1.000         1.000         1.000         1.000         1.000
+ YEAR_3         1.000         1.000         1.000         1.000         1.000
+ YEAR_4         1.000         1.000         1.000         1.000         1.000
+ LIFETIME       1.000         1.000         1.000         1.000         1.000
+ PRTAGEM        1.000         1.000         1.000         1.000         1.000
+ PRTSEXM        1.000         1.000         1.000         1.000         1.000
+ PRTMARRM       1.000         1.000         1.000         1.000         1.000
+ PRTEDUM1       1.000         1.000         1.000         1.000         1.000
+ PRTHKM         1.000         1.000         1.000         1.000         1.000
+ PRTPTM         1.000         1.000         1.000         1.000         1.000
+
+
+           Covariance Coverage
+              SIBF_1        SIBF_3        HKF           AGEM_SD       EDUM_SD
+              ________      ________      ________      ________      ________
+ SIBF_1         0.487
+ SIBF_3         0.487         0.487
+ HKF            0.487         0.487         1.000
+ AGEM_SD        0.487         0.487         1.000         1.000
+ EDUM_SD        0.487         0.487         1.000         1.000         1.000
+ SIOPM_SD       0.487         0.487         1.000         1.000         1.000
+ HWM_SD         0.487         0.487         1.000         1.000         1.000
+ DW1M           0.487         0.487         1.000         1.000         1.000
+ AGM_SD         0.487         0.487         1.000         1.000         1.000
+ SIBM_1         0.487         0.487         0.487         0.487         0.487
+ SIBM_3         0.487         0.487         0.487         0.487         0.487
+ HKM            0.487         0.487         1.000         1.000         1.000
+ INTMM1         0.487         0.487         0.487         0.487         0.487
+ INTMM3         0.487         0.487         0.487         0.487         0.487
+ INTMF1         0.487         0.487         0.487         0.487         0.487
+ INTMF3         0.487         0.487         0.487         0.487         0.487
+ INTFF1         0.487         0.487         0.487         0.487         0.487
+ INTFF3         0.487         0.487         0.487         0.487         0.487
+ INTFM1         0.487         0.487         0.487         0.487         0.487
+ INTFM3         0.487         0.487         0.487         0.487         0.487
+ PRTAGEF        0.487         0.487         1.000         1.000         1.000
+ PRTSEXF        0.487         0.487         1.000         1.000         1.000
+ PRTMARRF       0.487         0.487         1.000         1.000         1.000
+ PRTEDUF1       0.487         0.487         1.000         1.000         1.000
+ PRTHKF         0.487         0.487         1.000         1.000         1.000
+ PRTPTF         0.487         0.487         1.000         1.000         1.000
+ CHILD_SD       0.487         0.487         1.000         1.000         1.000
+ FINCC_SD       0.487         0.487         1.000         1.000         1.000
+ URBAN          0.487         0.487         1.000         1.000         1.000
+ PROV_1         0.487         0.487         1.000         1.000         1.000
+ YEAR_2         0.487         0.487         1.000         1.000         1.000
+ YEAR_3         0.487         0.487         1.000         1.000         1.000
+ YEAR_4         0.487         0.487         1.000         1.000         1.000
+ LIFETIME       0.487         0.487         1.000         1.000         1.000
+ PRTAGEM        0.487         0.487         1.000         1.000         1.000
+ PRTSEXM        0.487         0.487         1.000         1.000         1.000
+ PRTMARRM       0.487         0.487         1.000         1.000         1.000
+ PRTEDUM1       0.487         0.487         1.000         1.000         1.000
+ PRTHKM         0.487         0.487         1.000         1.000         1.000
+ PRTPTM         0.487         0.487         1.000         1.000         1.000
+
+
+           Covariance Coverage
+              SIOPM_SD      HWM_SD        DW1M          AGM_SD        SIBM_1
+              ________      ________      ________      ________      ________
+ SIOPM_SD       1.000
+ HWM_SD         1.000         1.000
+ DW1M           1.000         1.000         1.000
+ AGM_SD         1.000         1.000         1.000         1.000
+ SIBM_1         0.487         0.487         0.487         0.487         0.487
+ SIBM_3         0.487         0.487         0.487         0.487         0.487
+ HKM            1.000         1.000         1.000         1.000         0.487
+ INTMM1         0.487         0.487         0.487         0.487         0.487
+ INTMM3         0.487         0.487         0.487         0.487         0.487
+ INTMF1         0.487         0.487         0.487         0.487         0.487
+ INTMF3         0.487         0.487         0.487         0.487         0.487
+ INTFF1         0.487         0.487         0.487         0.487         0.487
+ INTFF3         0.487         0.487         0.487         0.487         0.487
+ INTFM1         0.487         0.487         0.487         0.487         0.487
+ INTFM3         0.487         0.487         0.487         0.487         0.487
+ PRTAGEF        1.000         1.000         1.000         1.000         0.487
+ PRTSEXF        1.000         1.000         1.000         1.000         0.487
+ PRTMARRF       1.000         1.000         1.000         1.000         0.487
+ PRTEDUF1       1.000         1.000         1.000         1.000         0.487
+ PRTHKF         1.000         1.000         1.000         1.000         0.487
+ PRTPTF         1.000         1.000         1.000         1.000         0.487
+ CHILD_SD       1.000         1.000         1.000         1.000         0.487
+ FINCC_SD       1.000         1.000         1.000         1.000         0.487
+ URBAN          1.000         1.000         1.000         1.000         0.487
+ PROV_1         1.000         1.000         1.000         1.000         0.487
+ YEAR_2         1.000         1.000         1.000         1.000         0.487
+ YEAR_3         1.000         1.000         1.000         1.000         0.487
+ YEAR_4         1.000         1.000         1.000         1.000         0.487
+ LIFETIME       1.000         1.000         1.000         1.000         0.487
+ PRTAGEM        1.000         1.000         1.000         1.000         0.487
+ PRTSEXM        1.000         1.000         1.000         1.000         0.487
+ PRTMARRM       1.000         1.000         1.000         1.000         0.487
+ PRTEDUM1       1.000         1.000         1.000         1.000         0.487
+ PRTHKM         1.000         1.000         1.000         1.000         0.487
+ PRTPTM         1.000         1.000         1.000         1.000         0.487
+
+
+           Covariance Coverage
+              SIBM_3        HKM           INTMM1        INTMM3        INTMF1
+              ________      ________      ________      ________      ________
+ SIBM_3         0.487
+ HKM            0.487         1.000
+ INTMM1         0.487         0.487         0.487
+ INTMM3         0.487         0.487         0.487         0.487
+ INTMF1         0.487         0.487         0.487         0.487         0.487
+ INTMF3         0.487         0.487         0.487         0.487         0.487
+ INTFF1         0.487         0.487         0.487         0.487         0.487
+ INTFF3         0.487         0.487         0.487         0.487         0.487
+ INTFM1         0.487         0.487         0.487         0.487         0.487
+ INTFM3         0.487         0.487         0.487         0.487         0.487
+ PRTAGEF        0.487         1.000         0.487         0.487         0.487
+ PRTSEXF        0.487         1.000         0.487         0.487         0.487
+ PRTMARRF       0.487         1.000         0.487         0.487         0.487
+ PRTEDUF1       0.487         1.000         0.487         0.487         0.487
+ PRTHKF         0.487         1.000         0.487         0.487         0.487
+ PRTPTF         0.487         1.000         0.487         0.487         0.487
+ CHILD_SD       0.487         1.000         0.487         0.487         0.487
+ FINCC_SD       0.487         1.000         0.487         0.487         0.487
+ URBAN          0.487         1.000         0.487         0.487         0.487
+ PROV_1         0.487         1.000         0.487         0.487         0.487
+ YEAR_2         0.487         1.000         0.487         0.487         0.487
+ YEAR_3         0.487         1.000         0.487         0.487         0.487
+ YEAR_4         0.487         1.000         0.487         0.487         0.487
+ LIFETIME       0.487         1.000         0.487         0.487         0.487
+ PRTAGEM        0.487         1.000         0.487         0.487         0.487
+ PRTSEXM        0.487         1.000         0.487         0.487         0.487
+ PRTMARRM       0.487         1.000         0.487         0.487         0.487
+ PRTEDUM1       0.487         1.000         0.487         0.487         0.487
+ PRTHKM         0.487         1.000         0.487         0.487         0.487
+ PRTPTM         0.487         1.000         0.487         0.487         0.487
+
+
+           Covariance Coverage
+              INTMF3        INTFF1        INTFF3        INTFM1        INTFM3
+              ________      ________      ________      ________      ________
+ INTMF3         0.487
+ INTFF1         0.487         0.487
+ INTFF3         0.487         0.487         0.487
+ INTFM1         0.487         0.487         0.487         0.487
+ INTFM3         0.487         0.487         0.487         0.487         0.487
+ PRTAGEF        0.487         0.487         0.487         0.487         0.487
+ PRTSEXF        0.487         0.487         0.487         0.487         0.487
+ PRTMARRF       0.487         0.487         0.487         0.487         0.487
+ PRTEDUF1       0.487         0.487         0.487         0.487         0.487
+ PRTHKF         0.487         0.487         0.487         0.487         0.487
+ PRTPTF         0.487         0.487         0.487         0.487         0.487
+ CHILD_SD       0.487         0.487         0.487         0.487         0.487
+ FINCC_SD       0.487         0.487         0.487         0.487         0.487
+ URBAN          0.487         0.487         0.487         0.487         0.487
+ PROV_1         0.487         0.487         0.487         0.487         0.487
+ YEAR_2         0.487         0.487         0.487         0.487         0.487
+ YEAR_3         0.487         0.487         0.487         0.487         0.487
+ YEAR_4         0.487         0.487         0.487         0.487         0.487
+ LIFETIME       0.487         0.487         0.487         0.487         0.487
+ PRTAGEM        0.487         0.487         0.487         0.487         0.487
+ PRTSEXM        0.487         0.487         0.487         0.487         0.487
+ PRTMARRM       0.487         0.487         0.487         0.487         0.487
+ PRTEDUM1       0.487         0.487         0.487         0.487         0.487
+ PRTHKM         0.487         0.487         0.487         0.487         0.487
+ PRTPTM         0.487         0.487         0.487         0.487         0.487
+
+
+           Covariance Coverage
+              PRTAGEF       PRTSEXF       PRTMARRF      PRTEDUF1      PRTHKF
+              ________      ________      ________      ________      ________
+ PRTAGEF        1.000
+ PRTSEXF        1.000         1.000
+ PRTMARRF       1.000         1.000         1.000
+ PRTEDUF1       1.000         1.000         1.000         1.000
+ PRTHKF         1.000         1.000         1.000         1.000         1.000
+ PRTPTF         1.000         1.000         1.000         1.000         1.000
+ CHILD_SD       1.000         1.000         1.000         1.000         1.000
+ FINCC_SD       1.000         1.000         1.000         1.000         1.000
+ URBAN          1.000         1.000         1.000         1.000         1.000
+ PROV_1         1.000         1.000         1.000         1.000         1.000
+ YEAR_2         1.000         1.000         1.000         1.000         1.000
+ YEAR_3         1.000         1.000         1.000         1.000         1.000
+ YEAR_4         1.000         1.000         1.000         1.000         1.000
+ LIFETIME       1.000         1.000         1.000         1.000         1.000
+ PRTAGEM        1.000         1.000         1.000         1.000         1.000
+ PRTSEXM        1.000         1.000         1.000         1.000         1.000
+ PRTMARRM       1.000         1.000         1.000         1.000         1.000
+ PRTEDUM1       1.000         1.000         1.000         1.000         1.000
+ PRTHKM         1.000         1.000         1.000         1.000         1.000
+ PRTPTM         1.000         1.000         1.000         1.000         1.000
+
+
+           Covariance Coverage
+              PRTPTF        CHILD_SD      FINCC_SD      URBAN         PROV_1
+              ________      ________      ________      ________      ________
+ PRTPTF         1.000
+ CHILD_SD       1.000         1.000
+ FINCC_SD       1.000         1.000         1.000
+ URBAN          1.000         1.000         1.000         1.000
+ PROV_1         1.000         1.000         1.000         1.000         1.000
+ YEAR_2         1.000         1.000         1.000         1.000         1.000
+ YEAR_3         1.000         1.000         1.000         1.000         1.000
+ YEAR_4         1.000         1.000         1.000         1.000         1.000
+ LIFETIME       1.000         1.000         1.000         1.000         1.000
+ PRTAGEM        1.000         1.000         1.000         1.000         1.000
+ PRTSEXM        1.000         1.000         1.000         1.000         1.000
+ PRTMARRM       1.000         1.000         1.000         1.000         1.000
+ PRTEDUM1       1.000         1.000         1.000         1.000         1.000
+ PRTHKM         1.000         1.000         1.000         1.000         1.000
+ PRTPTM         1.000         1.000         1.000         1.000         1.000
+
+
+           Covariance Coverage
+              YEAR_2        YEAR_3        YEAR_4        LIFETIME      PRTAGEM
+              ________      ________      ________      ________      ________
+ YEAR_2         1.000
+ YEAR_3         1.000         1.000
+ YEAR_4         1.000         1.000         1.000
+ LIFETIME       1.000         1.000         1.000         1.000
+ PRTAGEM        1.000         1.000         1.000         1.000         1.000
+ PRTSEXM        1.000         1.000         1.000         1.000         1.000
+ PRTMARRM       1.000         1.000         1.000         1.000         1.000
+ PRTEDUM1       1.000         1.000         1.000         1.000         1.000
+ PRTHKM         1.000         1.000         1.000         1.000         1.000
+ PRTPTM         1.000         1.000         1.000         1.000         1.000
+
+
+           Covariance Coverage
+              PRTSEXM       PRTMARRM      PRTEDUM1      PRTHKM        PRTPTM
+              ________      ________      ________      ________      ________
+ PRTSEXM        1.000
+ PRTMARRM       1.000         1.000
+ PRTEDUM1       1.000         1.000         1.000
+ PRTHKM         1.000         1.000         1.000         1.000
+ PRTPTM         1.000         1.000         1.000         1.000         1.000
+
+
+SAMPLE STATISTICS
+
+
+     ESTIMATED SAMPLE STATISTICS
+
+
+           Means
+              OP5F          INCCF_SD      OP5M          INCCM_SD      AGEF_SD
+              ________      ________      ________      ________      ________
+                3.527        -0.190         4.280         0.190        -0.110
+
+
+           Means
+              EDUF_SD       SIOPF_SD      HWF_SD        DW1F          AGF_SD
+              ________      ________      ________      ________      ________
+               -0.125        -0.099         0.339         0.294         0.012
+
+
+           Means
+              SIBF_1        SIBF_3        HKF           AGEM_SD       EDUM_SD
+              ________      ________      ________      ________      ________
+                0.361         0.297         0.747         0.110         0.125
+
+
+           Means
+              SIOPM_SD      HWM_SD        DW1M          AGM_SD        SIBM_1
+              ________      ________      ________      ________      ________
+                0.099        -0.339         0.527        -0.012         0.334
+
+
+           Means
+              SIBM_3        HKM           INTMM1        INTMM3        INTMF1
+              ________      ________      ________      ________      ________
+                0.381         0.727         0.062         0.100         0.088
+
+
+           Means
+              INTMF3        INTFF1        INTFF3        INTFM1        INTFM3
+              ________      ________      ________      ________      ________
+                0.081        -0.052        -0.039        -0.062        -0.040
+
+
+           Means
+              PRTAGEF       PRTSEXF       PRTMARRF      PRTEDUF1      PRTHKF
+              ________      ________      ________      ________      ________
+               69.553         0.734         0.339         0.698         0.838
+
+
+           Means
+              PRTPTF        CHILD_SD      FINCC_SD      URBAN         PROV_1
+              ________      ________      ________      ________      ________
+                0.111         0.000         0.000         0.496         0.393
+
+
+           Means
+              YEAR_2        YEAR_3        YEAR_4        LIFETIME      PRTAGEM
+              ________      ________      ________      ________      ________
+                0.278         0.206         0.170         0.604        71.044
+
+
+           Means
+              PRTSEXM       PRTMARRM      PRTEDUM1      PRTHKM        PRTPTM
+              ________      ________      ________      ________      ________
+                0.703         0.346         0.719         0.783         0.128
+
+
+           Covariances
+              OP5F          INCCF_SD      OP5M          INCCM_SD      AGEF_SD
+              ________      ________      ________      ________      ________
+ OP5F           0.957
+ INCCF_SD      -0.023         0.927
+ OP5M           0.046        -0.045         1.000
+ INCCM_SD       0.020         0.361        -0.124         1.001
+ AGEF_SD        0.017        -0.074        -0.058        -0.033         1.016
+ EDUF_SD        0.109         0.358        -0.069         0.268        -0.174
+ SIOPF_SD       0.046         0.282        -0.022         0.071         0.017
+ HWF_SD         0.001        -0.197         0.021        -0.084         0.115
+ DW1F           0.123         0.019         0.006         0.012        -0.125
+ AGF_SD        -0.012        -0.002         0.028        -0.006         0.019
+ SIBF_1         0.022         0.019        -0.033         0.022        -0.043
+ SIBF_3         0.021         0.024         0.012         0.028        -0.079
+ HKF           -0.036        -0.118         0.049        -0.098        -0.039
+ AGEM_SD        0.015        -0.078        -0.060        -0.039         0.918
+ EDUM_SD        0.060         0.245        -0.064         0.237        -0.063
+ SIOPM_SD       0.039         0.138        -0.027         0.110        -0.003
+ HWM_SD        -0.020        -0.082         0.071        -0.140         0.064
+ DW1M          -0.010         0.051         0.133         0.023        -0.204
+ AGM_SD         0.026         0.010         0.027        -0.001         0.003
+ SIBM_1        -0.017         0.007        -0.017         0.012        -0.001
+ SIBM_3         0.026         0.038         0.045         0.023        -0.137
+ HKM           -0.034        -0.118         0.030        -0.103        -0.041
+ INTMM1         0.001         0.136        -0.054         0.333         0.002
+ INTMM3         0.012         0.121        -0.017         0.346        -0.032
+ INTMF1         0.008         0.126        -0.057         0.350        -0.012
+ INTMF3         0.008         0.109        -0.022         0.280        -0.010
+ INTFF1        -0.004         0.328        -0.041         0.118        -0.015
+ INTFF3        -0.028         0.267         0.014         0.097         0.014
+ INTFM1         0.001         0.310        -0.017         0.132        -0.031
+ INTFM3        -0.024         0.332        -0.018         0.110         0.025
+ PRTAGEF        0.062        -0.557        -0.281        -0.274         7.598
+ PRTSEXF       -0.016         0.022        -0.003         0.007        -0.126
+ PRTMARRF      -0.013        -0.014         0.004        -0.005         0.098
+ PRTEDUF1      -0.014        -0.076         0.018        -0.048         0.080
+ PRTHKF        -0.048        -0.062         0.034        -0.056        -0.030
+ PRTPTF         0.010         0.027        -0.010         0.013         0.012
+ CHILD_SD      -0.078        -0.192         0.059        -0.156        -0.046
+ FINCC_SD       0.033         0.223        -0.056         0.202         0.096
+ URBAN         -0.020        -0.116         0.067        -0.090        -0.038
+ PROV_1         0.010         0.075        -0.009         0.058         0.029
+ YEAR_2         0.005         0.007        -0.005         0.015         0.000
+ YEAR_3         0.002         0.016        -0.006         0.022         0.019
+ YEAR_4         0.006         0.030        -0.015         0.028         0.045
+ LIFETIME       0.006        -0.019        -0.029        -0.014         0.404
+ PRTAGEM        0.254        -0.520        -0.300        -0.289         6.800
+ PRTSEXM        0.004         0.030        -0.014         0.019        -0.133
+ PRTMARRM       0.006        -0.037         0.016        -0.020         0.122
+ PRTEDUM1      -0.014        -0.057         0.021        -0.043         0.099
+ PRTHKM        -0.026        -0.086        -0.004        -0.074        -0.026
+ PRTPTM         0.007         0.029        -0.004         0.016         0.008
+
+
+           Covariances
+              EDUF_SD       SIOPF_SD      HWF_SD        DW1F          AGF_SD
+              ________      ________      ________      ________      ________
+ EDUF_SD        1.110
+ SIOPF_SD       0.317         1.085
+ HWF_SD        -0.168        -0.102         0.936
+ DW1F           0.055         0.015        -0.007         0.208
+ AGF_SD        -0.017        -0.003         0.005        -0.030         1.041
+ SIBF_1         0.033         0.005        -0.008         0.017        -0.229
+ SIBF_3         0.064         0.023        -0.023         0.008         0.164
+ HKF           -0.201        -0.058         0.041        -0.008        -0.009
+ AGEM_SD       -0.178         0.003         0.115        -0.115         0.047
+ EDUM_SD        0.585         0.205        -0.119         0.028        -0.018
+ SIOPM_SD       0.316         0.271        -0.063         0.005        -0.012
+ HWM_SD        -0.154        -0.011         0.166        -0.001        -0.014
+ DW1M           0.052         0.011        -0.039         0.044        -0.001
+ AGM_SD        -0.006         0.000         0.015         0.000         0.093
+ SIBM_1         0.021         0.016        -0.011        -0.004        -0.001
+ SIBM_3         0.070         0.001        -0.019         0.019        -0.010
+ HKM           -0.201        -0.054         0.044        -0.006        -0.010
+ INTMM1         0.103         0.035        -0.036        -0.006         0.004
+ INTMM3         0.094         0.026        -0.024         0.012        -0.003
+ INTMF1         0.102         0.021        -0.022         0.008        -0.031
+ INTMF3         0.095         0.039        -0.020        -0.001         0.038
+ INTFF1         0.138         0.096        -0.063         0.011         0.059
+ INTFF3         0.098         0.094        -0.055        -0.007        -0.040
+ INTFM1         0.125         0.106        -0.061         0.001         0.010
+ INTFM3         0.116         0.114        -0.077         0.003        -0.019
+ PRTAGEF       -1.374         0.107         0.875        -1.079         5.717
+ PRTSEXF        0.048         0.009        -0.022         0.016         0.007
+ PRTMARRF      -0.043        -0.014         0.016        -0.014         0.042
+ PRTEDUF1      -0.150        -0.056         0.039        -0.015         0.043
+ PRTHKF        -0.127        -0.034         0.023        -0.008        -0.005
+ PRTPTF         0.049         0.029        -0.010         0.002         0.017
+ CHILD_SD      -0.331        -0.114         0.101         0.001         0.005
+ FINCC_SD       0.250         0.169        -0.104         0.002        -0.032
+ URBAN         -0.182        -0.064         0.054         0.004        -0.020
+ PROV_1         0.094         0.029        -0.041        -0.007         0.001
+ YEAR_2        -0.003         0.008         0.007         0.006         0.005
+ YEAR_3         0.021         0.019        -0.005         0.001        -0.001
+ YEAR_4         0.029         0.032        -0.015        -0.002        -0.013
+ LIFETIME      -0.080         0.010         0.045        -0.051         0.022
+ PRTAGEM       -1.345         0.019         0.931        -0.850         0.848
+ PRTSEXM        0.048         0.015        -0.029         0.017        -0.012
+ PRTMARRM      -0.063        -0.017         0.029        -0.017         0.007
+ PRTEDUM1      -0.134        -0.046         0.048        -0.020         0.003
+ PRTHKM        -0.144        -0.036         0.039        -0.004        -0.010
+ PRTPTM         0.052         0.039        -0.016         0.002        -0.007
+
+
+           Covariances
+              SIBF_1        SIBF_3        HKF           AGEM_SD       EDUM_SD
+              ________      ________      ________      ________      ________
+ SIBF_1         0.230
+ SIBF_3        -0.098         0.202
+ HKF           -0.010        -0.009         0.189
+ AGEM_SD       -0.033        -0.069        -0.045         0.960
+ EDUM_SD        0.029         0.032        -0.156        -0.070         0.858
+ SIOPM_SD       0.018         0.017        -0.095         0.006         0.345
+ HWM_SD         0.007        -0.014         0.039         0.077        -0.119
+ DW1M           0.006         0.022         0.010        -0.201         0.031
+ AGM_SD        -0.005        -0.011        -0.011         0.001        -0.019
+ SIBM_1        -0.002         0.007         0.003        -0.007         0.027
+ SIBM_3         0.010         0.018        -0.013        -0.140         0.039
+ HKM           -0.011        -0.007         0.143        -0.050        -0.184
+ INTMM1         0.005         0.011        -0.037         0.001         0.084
+ INTMM3         0.010         0.014        -0.034        -0.032         0.084
+ INTMF1         0.048        -0.020        -0.036        -0.011         0.090
+ INTMF3        -0.024         0.049        -0.034        -0.016         0.068
+ INTFF1        -0.043         0.019        -0.049        -0.022         0.092
+ INTFF3         0.016        -0.030        -0.032         0.006         0.064
+ INTFM1         0.005         0.015        -0.040        -0.033         0.081
+ INTFM3         0.013        -0.005        -0.043         0.032         0.087
+ PRTAGEF       -1.549         0.296        -0.336         7.027        -0.563
+ PRTSEXF        0.029         0.000         0.001        -0.116         0.028
+ PRTMARRF      -0.032         0.008         0.000         0.092        -0.018
+ PRTEDUF1      -0.030         0.000         0.038         0.073        -0.104
+ PRTHKF        -0.012        -0.004         0.083        -0.033        -0.093
+ PRTPTF        -0.003         0.009        -0.021         0.011         0.038
+ CHILD_SD      -0.013        -0.039         0.130        -0.056        -0.234
+ FINCC_SD       0.012         0.018        -0.065         0.094         0.211
+ URBAN         -0.010        -0.006         0.092        -0.040        -0.137
+ PROV_1         0.004         0.010        -0.023         0.010         0.060
+ YEAR_2         0.001        -0.001         0.003         0.000        -0.003
+ YEAR_3         0.002         0.001        -0.001         0.018         0.020
+ YEAR_4         0.002         0.002        -0.004         0.044         0.023
+ LIFETIME      -0.025        -0.022        -0.017         0.368        -0.035
+ PRTAGEM       -0.276        -0.567        -0.391         7.087        -0.620
+ PRTSEXM        0.010         0.012         0.004        -0.144         0.030
+ PRTMARRM      -0.006        -0.010         0.000         0.134        -0.045
+ PRTEDUM1      -0.013        -0.020         0.028         0.104        -0.106
+ PRTHKM        -0.007        -0.009         0.103        -0.036        -0.119
+ PRTPTM         0.004         0.004        -0.019         0.005         0.052
+
+
+           Covariances
+              SIOPM_SD      HWM_SD        DW1M          AGM_SD        SIBM_1
+              ________      ________      ________      ________      ________
+ SIOPM_SD       0.895
+ HWM_SD        -0.047         0.834
+ DW1M           0.002         0.003         0.249
+ AGM_SD         0.010        -0.004        -0.039         0.959
+ SIBM_1        -0.005        -0.008         0.011        -0.220         0.224
+ SIBM_3         0.017        -0.014         0.034         0.180        -0.112
+ HKM           -0.106         0.039         0.009        -0.017         0.000
+ INTMM1         0.054        -0.047         0.006        -0.014         0.038
+ INTMM3         0.025        -0.050         0.012         0.034        -0.023
+ INTMF1         0.052        -0.046         0.008         0.010         0.002
+ INTMF3         0.031        -0.026         0.004         0.005         0.005
+ INTFF1         0.044        -0.036         0.014         0.017         0.001
+ INTFF3         0.055        -0.016         0.006         0.000         0.008
+ INTFM1         0.054        -0.020         0.010         0.078        -0.050
+ INTFM3         0.051        -0.026         0.011        -0.041         0.015
+ PRTAGEF       -0.086         0.401        -1.515         0.515        -0.011
+ PRTSEXF        0.010        -0.011         0.022        -0.005        -0.003
+ PRTMARRF      -0.021         0.006        -0.015         0.006         0.004
+ PRTEDUF1      -0.064         0.027        -0.016        -0.002        -0.001
+ PRTHKF        -0.064         0.021         0.011        -0.019         0.002
+ PRTPTF         0.028        -0.009        -0.004         0.003        -0.002
+ CHILD_SD      -0.107         0.062         0.039         0.023        -0.013
+ FINCC_SD       0.168        -0.066         0.015        -0.047         0.025
+ URBAN         -0.082         0.063         0.018        -0.001        -0.011
+ PROV_1         0.027        -0.044        -0.005         0.002         0.010
+ YEAR_2         0.002        -0.001         0.001         0.003         0.000
+ YEAR_3         0.015         0.015         0.005        -0.006        -0.001
+ YEAR_4         0.024         0.001        -0.001        -0.014         0.007
+ LIFETIME       0.002         0.023        -0.086         0.014        -0.007
+ PRTAGEM        0.095         0.543        -1.696         5.157        -1.232
+ PRTSEXM       -0.002        -0.016         0.034        -0.017         0.030
+ PRTMARRM      -0.013         0.019        -0.037         0.064        -0.036
+ PRTEDUM1      -0.049         0.026        -0.031         0.050        -0.022
+ PRTHKM        -0.055         0.030        -0.005        -0.008        -0.006
+ PRTPTM         0.037        -0.010         0.006         0.008         0.005
+
+
+           Covariances
+              SIBM_3        HKM           INTMM1        INTMM3        INTMF1
+              ________      ________      ________      ________      ________
+ SIBM_3         0.226
+ HKM           -0.011         0.198
+ INTMM1        -0.019        -0.038         0.340
+ INTMM3         0.049        -0.039        -0.005         0.352
+ INTMF1         0.010        -0.038         0.114         0.128         0.357
+ INTMF3         0.011        -0.030         0.099         0.114        -0.006
+ INTFF1         0.020        -0.047         0.045         0.047         0.111
+ INTFF3        -0.003        -0.029         0.049         0.031         0.003
+ INTFM1         0.026        -0.035         0.125         0.006         0.046
+ INTFM3        -0.028        -0.051         0.004         0.105         0.045
+ PRTAGEF       -1.068        -0.354         0.034        -0.253        -0.254
+ PRTSEXF        0.017         0.000        -0.010         0.008         0.007
+ PRTMARRF      -0.010         0.001         0.006        -0.004        -0.010
+ PRTEDUF1      -0.017         0.035        -0.011        -0.025        -0.034
+ PRTHKF        -0.005         0.073        -0.022        -0.015        -0.025
+ PRTPTF         0.000        -0.021         0.003         0.006         0.005
+ CHILD_SD      -0.017         0.138        -0.072        -0.050        -0.049
+ FINCC_SD       0.016        -0.065         0.073         0.077         0.070
+ URBAN         -0.007         0.093        -0.038        -0.029        -0.037
+ PROV_1         0.020        -0.022         0.028         0.030         0.022
+ YEAR_2        -0.001         0.001         0.003         0.003         0.005
+ YEAR_3         0.001         0.000         0.004         0.008         0.008
+ YEAR_4         0.003        -0.003         0.012         0.009         0.010
+ LIFETIME      -0.051        -0.017         0.003        -0.014        -0.003
+ PRTAGEM       -0.070        -0.461        -0.069        -0.051        -0.034
+ PRTSEXM        0.004         0.006         0.008         0.006         0.011
+ PRTMARRM       0.006        -0.002        -0.011        -0.003        -0.007
+ PRTEDUM1      -0.008         0.031        -0.022        -0.014        -0.013
+ PRTHKM        -0.009         0.116        -0.036        -0.023        -0.028
+ PRTPTM         0.000        -0.024         0.011         0.002         0.009
+
+
+           Covariances
+              INTMF3        INTFF1        INTFF3        INTFM1        INTFM3
+              ________      ________      ________      ________      ________
+ INTMF3         0.286
+ INTFF1         0.006         0.335
+ INTFF3         0.094        -0.001         0.270
+ INTFM1         0.052         0.108         0.095         0.317
+ INTFM3         0.031         0.124         0.111         0.000         0.334
+ PRTAGEF        0.129         0.203        -0.108        -0.175         0.087
+ PRTSEXF       -0.004         0.004        -0.001         0.004         0.006
+ PRTMARRF       0.008         0.007        -0.001        -0.004        -0.003
+ PRTEDUF1      -0.010        -0.026        -0.020        -0.028        -0.030
+ PRTHKF        -0.014        -0.027        -0.014        -0.019        -0.025
+ PRTPTF         0.005         0.008         0.007         0.008         0.015
+ CHILD_SD      -0.060        -0.074        -0.059        -0.077        -0.083
+ FINCC_SD       0.062         0.082         0.059         0.071         0.084
+ URBAN         -0.026        -0.044        -0.033        -0.041        -0.041
+ PROV_1         0.029         0.037         0.023         0.033         0.029
+ YEAR_2         0.002         0.000         0.003         0.001         0.002
+ YEAR_3         0.005         0.006         0.004         0.004         0.003
+ YEAR_4         0.008         0.012         0.006         0.009         0.010
+ LIFETIME      -0.007        -0.002         0.005        -0.004         0.011
+ PRTAGEM       -0.084        -0.066         0.043         0.180         0.016
+ PRTSEXM        0.004         0.011         0.003         0.004         0.010
+ PRTMARRM      -0.006        -0.012        -0.008        -0.004        -0.013
+ PRTEDUM1      -0.014        -0.013        -0.014        -0.016        -0.024
+ PRTHKM        -0.024        -0.032        -0.023        -0.028        -0.035
+ PRTPTM         0.002         0.007         0.010         0.008         0.013
+
+
+           Covariances
+              PRTAGEF       PRTSEXF       PRTMARRF      PRTEDUF1      PRTHKF
+              ________      ________      ________      ________      ________
+ PRTAGEF       86.741
+ PRTSEXF       -0.892         0.195
+ PRTMARRF       0.948        -0.108         0.224
+ PRTEDUF1       0.818        -0.050         0.032         0.211
+ PRTHKF        -0.245        -0.008         0.016         0.037         0.136
+ PRTPTF         0.182         0.024        -0.012        -0.029        -0.023
+ CHILD_SD      -0.312        -0.001         0.018         0.051         0.086
+ FINCC_SD       0.542         0.003         0.014        -0.054        -0.033
+ URBAN         -0.388        -0.006         0.002         0.030         0.051
+ PROV_1         0.220        -0.005         0.006        -0.018        -0.013
+ YEAR_2         0.032         0.001        -0.005         0.005        -0.001
+ YEAR_3         0.131         0.000        -0.008        -0.002         0.001
+ YEAR_4         0.262        -0.003         0.010        -0.008         0.000
+ LIFETIME       3.102        -0.048         0.035         0.034        -0.014
+ PRTAGEM       54.718        -0.889         0.709         0.535        -0.348
+ PRTSEXM       -1.043         0.031        -0.019        -0.019         0.002
+ PRTMARRM       0.933        -0.029         0.025         0.019        -0.001
+ PRTEDUM1       0.747        -0.021         0.011         0.052         0.020
+ PRTHKM        -0.249        -0.002         0.000         0.027         0.063
+ PRTPTM         0.022         0.006        -0.003        -0.013        -0.015
+
+
+           Covariances
+              PRTPTF        CHILD_SD      FINCC_SD      URBAN         PROV_1
+              ________      ________      ________      ________      ________
+ PRTPTF         0.099
+ CHILD_SD      -0.024         1.000
+ FINCC_SD       0.013        -0.040         1.000
+ URBAN         -0.019         0.115        -0.076         0.250
+ PROV_1         0.005        -0.081         0.049        -0.027         0.239
+ YEAR_2         0.000         0.008        -0.092        -0.002         0.001
+ YEAR_3        -0.001         0.019        -0.056         0.001        -0.003
+ YEAR_4         0.001         0.013         0.320        -0.005         0.001
+ LIFETIME       0.007        -0.022         0.031        -0.017         0.007
+ PRTAGEM        0.097        -0.289         0.445        -0.303         0.086
+ PRTSEXM       -0.002        -0.007         0.013         0.004         0.001
+ PRTMARRM       0.000         0.004        -0.012        -0.001        -0.003
+ PRTEDUM1      -0.006         0.037        -0.052         0.020        -0.007
+ PRTHKM        -0.016         0.103        -0.041         0.069        -0.015
+ PRTPTM         0.011        -0.023         0.014        -0.011         0.000
+
+
+           Covariances
+              YEAR_2        YEAR_3        YEAR_4        LIFETIME      PRTAGEM
+              ________      ________      ________      ________      ________
+ YEAR_2         0.201
+ YEAR_3        -0.057         0.164
+ YEAR_4        -0.047        -0.035         0.141
+ LIFETIME      -0.001         0.004         0.017         0.239
+ PRTAGEM        0.014         0.102         0.248         2.794        80.039
+ PRTSEXM       -0.002         0.002         0.001        -0.054        -1.154
+ PRTMARRM      -0.003        -0.007         0.003         0.051         1.331
+ PRTEDUM1       0.003        -0.003        -0.008         0.043         1.036
+ PRTHKM         0.000         0.000         0.001        -0.012        -0.311
+ PRTPTM        -0.001         0.002         0.000         0.004         0.079
+
+
+           Covariances
+              PRTSEXM       PRTMARRM      PRTEDUM1      PRTHKM        PRTPTM
+              ________      ________      ________      ________      ________
+ PRTSEXM        0.209
+ PRTMARRM      -0.144         0.226
+ PRTEDUM1      -0.054         0.046         0.202
+ PRTHKM        -0.004         0.008         0.040         0.170
+ PRTPTM         0.031        -0.022        -0.028        -0.028         0.112
+
+
+           Correlations
+              OP5F          INCCF_SD      OP5M          INCCM_SD      AGEF_SD
+              ________      ________      ________      ________      ________
+ OP5F           1.000
+ INCCF_SD      -0.024         1.000
+ OP5M           0.047        -0.047         1.000
+ INCCM_SD       0.020         0.374        -0.123         1.000
+ AGEF_SD        0.017        -0.076        -0.058        -0.033         1.000
+ EDUF_SD        0.106         0.353        -0.065         0.254        -0.164
+ SIOPF_SD       0.045         0.281        -0.021         0.068         0.016
+ HWF_SD         0.001        -0.212         0.022        -0.087         0.118
+ DW1F           0.275         0.043         0.012         0.026        -0.271
+ AGF_SD        -0.012        -0.002         0.027        -0.006         0.018
+ SIBF_1         0.047         0.041        -0.068         0.046        -0.090
+ SIBF_3         0.048         0.056         0.026         0.063        -0.174
+ HKF           -0.085        -0.282         0.112        -0.226        -0.089
+ AGEM_SD        0.016        -0.083        -0.062        -0.040         0.930
+ EDUM_SD        0.066         0.275        -0.069         0.256        -0.067
+ SIOPM_SD       0.043         0.152        -0.028         0.116        -0.003
+ HWM_SD        -0.022        -0.093         0.077        -0.154         0.070
+ DW1M          -0.021         0.105         0.265         0.046        -0.406
+ AGM_SD         0.027         0.011         0.028        -0.001         0.003
+ SIBM_1        -0.037         0.015        -0.037         0.025        -0.002
+ SIBM_3         0.057         0.083         0.095         0.048        -0.286
+ HKM           -0.077        -0.276         0.067        -0.231        -0.091
+ INTMM1         0.002         0.242        -0.093         0.571         0.003
+ INTMM3         0.021         0.212        -0.029         0.583        -0.054
+ INTMF1         0.014         0.218        -0.096         0.585        -0.021
+ INTMF3         0.015         0.211        -0.042         0.523        -0.019
+ INTFF1        -0.006         0.589        -0.071         0.204        -0.026
+ INTFF3        -0.055         0.533         0.027         0.188         0.027
+ INTFM1         0.002         0.572        -0.030         0.234        -0.055
+ INTFM3        -0.042         0.596        -0.031         0.190         0.044
+ PRTAGEF        0.007        -0.062        -0.030        -0.029         0.809
+ PRTSEXF       -0.037         0.051        -0.008         0.016        -0.283
+ PRTMARRF      -0.029        -0.030         0.009        -0.012         0.205
+ PRTEDUF1      -0.030        -0.173         0.040        -0.105         0.172
+ PRTHKF        -0.133        -0.175         0.093        -0.151        -0.080
+ PRTPTF         0.034         0.089        -0.033         0.041         0.038
+ CHILD_SD      -0.080        -0.200         0.059        -0.156        -0.045
+ FINCC_SD       0.034         0.231        -0.056         0.202         0.095
+ URBAN         -0.041        -0.241         0.133        -0.179        -0.075
+ PROV_1         0.020         0.160        -0.018         0.119         0.058
+ YEAR_2         0.012         0.015        -0.011         0.034         0.001
+ YEAR_3         0.004         0.040        -0.014         0.054         0.046
+ YEAR_4         0.017         0.084        -0.040         0.075         0.118
+ LIFETIME       0.012        -0.040        -0.059        -0.028         0.820
+ PRTAGEM        0.029        -0.060        -0.033        -0.032         0.754
+ PRTSEXM        0.008         0.069        -0.031         0.041        -0.289
+ PRTMARRM       0.013        -0.081         0.034        -0.042         0.254
+ PRTEDUM1      -0.032        -0.132         0.046        -0.095         0.219
+ PRTHKM        -0.065        -0.218        -0.009        -0.179        -0.063
+ PRTPTM         0.020         0.089        -0.012         0.048         0.024
+
+
+           Correlations
+              EDUF_SD       SIOPF_SD      HWF_SD        DW1F          AGF_SD
+              ________      ________      ________      ________      ________
+ EDUF_SD        1.000
+ SIOPF_SD       0.289         1.000
+ HWF_SD        -0.165        -0.101         1.000
+ DW1F           0.115         0.033        -0.016         1.000
+ AGF_SD        -0.016        -0.003         0.005        -0.064         1.000
+ SIBF_1         0.064         0.009        -0.018         0.080        -0.469
+ SIBF_3         0.136         0.049        -0.052         0.038         0.357
+ HKF           -0.439        -0.129         0.097        -0.040        -0.021
+ AGEM_SD       -0.172         0.003         0.121        -0.257         0.047
+ EDUM_SD        0.599         0.212        -0.132         0.066        -0.019
+ SIOPM_SD       0.317         0.275        -0.069         0.012        -0.012
+ HWM_SD        -0.160        -0.012         0.188        -0.001        -0.015
+ DW1M           0.098         0.022        -0.081         0.192        -0.002
+ AGM_SD        -0.005         0.000         0.015        -0.001         0.093
+ SIBM_1         0.042         0.032        -0.024        -0.017        -0.001
+ SIBM_3         0.139         0.002        -0.041         0.086        -0.022
+ HKM           -0.428        -0.117         0.102        -0.030        -0.022
+ INTMM1         0.168         0.058        -0.063        -0.023         0.007
+ INTMM3         0.151         0.043        -0.041         0.046        -0.005
+ INTMF1         0.163         0.033        -0.038         0.028        -0.050
+ INTMF3         0.169         0.070        -0.039        -0.005         0.070
+ INTFF1         0.226         0.159        -0.112         0.041         0.100
+ INTFF3         0.179         0.174        -0.110        -0.032        -0.075
+ INTFM1         0.211         0.181        -0.111         0.005         0.018
+ INTFM3         0.191         0.189        -0.138         0.010        -0.032
+ PRTAGEF       -0.140         0.011         0.097        -0.254         0.602
+ PRTSEXF        0.104         0.020        -0.051         0.080         0.015
+ PRTMARRF      -0.087        -0.029         0.035        -0.064         0.087
+ PRTEDUF1      -0.310        -0.117         0.087        -0.070         0.092
+ PRTHKF        -0.327        -0.088         0.063        -0.049        -0.013
+ PRTPTF         0.149         0.088        -0.034         0.013         0.054
+ CHILD_SD      -0.314        -0.109         0.104         0.002         0.005
+ FINCC_SD       0.237         0.162        -0.108         0.005        -0.031
+ URBAN         -0.346        -0.123         0.111         0.017        -0.040
+ PROV_1         0.182         0.056        -0.088        -0.030         0.003
+ YEAR_2        -0.006         0.016         0.016         0.027         0.012
+ YEAR_3         0.050         0.046        -0.014         0.006        -0.003
+ YEAR_4         0.073         0.081        -0.042        -0.011        -0.033
+ LIFETIME      -0.156         0.019         0.095        -0.228         0.044
+ PRTAGEM       -0.143         0.002         0.108        -0.209         0.093
+ PRTSEXM        0.100         0.032        -0.066         0.083        -0.025
+ PRTMARRM      -0.126        -0.033         0.063        -0.077         0.013
+ PRTEDUM1      -0.283        -0.098         0.109        -0.095         0.006
+ PRTHKM        -0.332        -0.084         0.098        -0.022        -0.024
+ PRTPTM         0.147         0.111        -0.049         0.014        -0.021
+
+
+           Correlations
+              SIBF_1        SIBF_3        HKF           AGEM_SD       EDUM_SD
+              ________      ________      ________      ________      ________
+ SIBF_1         1.000
+ SIBF_3        -0.454         1.000
+ HKF           -0.050        -0.048         1.000
+ AGEM_SD       -0.070        -0.156        -0.105         1.000
+ EDUM_SD        0.065         0.078        -0.387        -0.077         1.000
+ SIOPM_SD       0.040         0.039        -0.230         0.007         0.394
+ HWM_SD         0.017        -0.034         0.098         0.086        -0.141
+ DW1M           0.023         0.100         0.045        -0.412         0.068
+ AGM_SD        -0.011        -0.026        -0.026         0.001        -0.021
+ SIBM_1        -0.009         0.034         0.014        -0.015         0.061
+ SIBM_3         0.046         0.083        -0.063        -0.301         0.088
+ HKM           -0.053        -0.036         0.737        -0.114        -0.446
+ INTMM1         0.018         0.044        -0.145         0.001         0.155
+ INTMM3         0.035         0.052        -0.133        -0.055         0.153
+ INTMF1         0.167        -0.075        -0.137        -0.020         0.162
+ INTMF3        -0.092         0.204        -0.145        -0.030         0.137
+ INTFF1        -0.157         0.075        -0.195        -0.039         0.171
+ INTFF3         0.063        -0.128        -0.144         0.011         0.133
+ INTFM1         0.020         0.058        -0.164        -0.060         0.154
+ INTFM3         0.047        -0.021        -0.171         0.056         0.163
+ PRTAGEF       -0.347         0.071        -0.083         0.770        -0.065
+ PRTSEXF        0.136        -0.002         0.003        -0.269         0.067
+ PRTMARRF      -0.141         0.037         0.002         0.198        -0.041
+ PRTEDUF1      -0.135         0.002         0.189         0.163        -0.245
+ PRTHKF        -0.067        -0.022         0.518        -0.092        -0.271
+ PRTPTF        -0.022         0.063        -0.156         0.036         0.130
+ CHILD_SD      -0.027        -0.088         0.299        -0.057        -0.253
+ FINCC_SD       0.026         0.039        -0.150         0.096         0.228
+ URBAN         -0.043        -0.026         0.421        -0.082        -0.295
+ PROV_1         0.018         0.047        -0.108         0.021         0.133
+ YEAR_2         0.004        -0.005         0.015        -0.001        -0.006
+ YEAR_3         0.009         0.006        -0.008         0.046         0.055
+ YEAR_4         0.011         0.009        -0.024         0.119         0.065
+ LIFETIME      -0.107        -0.101        -0.079         0.767        -0.078
+ PRTAGEM       -0.064        -0.141        -0.101         0.809        -0.075
+ PRTSEXM        0.045         0.057         0.022        -0.322         0.070
+ PRTMARRM      -0.026        -0.046         0.001         0.287        -0.102
+ PRTEDUM1      -0.059        -0.097         0.145         0.236        -0.255
+ PRTHKM        -0.036        -0.048         0.574        -0.089        -0.311
+ PRTPTM         0.027         0.029        -0.130         0.016         0.167
+
+
+           Correlations
+              SIOPM_SD      HWM_SD        DW1M          AGM_SD        SIBM_1
+              ________      ________      ________      ________      ________
+ SIOPM_SD       1.000
+ HWM_SD        -0.054         1.000
+ DW1M           0.004         0.007         1.000
+ AGM_SD         0.010        -0.005        -0.080         1.000
+ SIBM_1        -0.011        -0.019         0.048        -0.475         1.000
+ SIBM_3         0.038        -0.032         0.143         0.387        -0.497
+ HKM           -0.252         0.097         0.039        -0.039        -0.002
+ INTMM1         0.098        -0.087         0.020        -0.024         0.137
+ INTMM3         0.044        -0.092         0.040         0.059        -0.081
+ INTMF1         0.093        -0.085         0.025         0.017         0.005
+ INTMF3         0.062        -0.053         0.017         0.009         0.021
+ INTFF1         0.080        -0.067         0.049         0.031         0.004
+ INTFF3         0.112        -0.035         0.024         0.001         0.034
+ INTFM1         0.102        -0.040         0.036         0.141        -0.187
+ INTFM3         0.092        -0.049         0.038        -0.072         0.055
+ PRTAGEF       -0.010         0.047        -0.326         0.057        -0.002
+ PRTSEXF        0.025        -0.028         0.100        -0.012        -0.015
+ PRTMARRF      -0.047         0.013        -0.063         0.013         0.016
+ PRTEDUF1      -0.148         0.064        -0.069        -0.004        -0.004
+ PRTHKF        -0.184         0.061         0.060        -0.053         0.009
+ PRTPTF         0.095        -0.031        -0.024         0.009        -0.011
+ CHILD_SD      -0.113         0.067         0.079         0.024        -0.027
+ FINCC_SD       0.177        -0.072         0.030        -0.048         0.052
+ URBAN         -0.174         0.137         0.073        -0.003        -0.047
+ PROV_1         0.059        -0.099        -0.019         0.004         0.042
+ YEAR_2         0.004        -0.003         0.005         0.007        -0.002
+ YEAR_3         0.039         0.041         0.022        -0.016        -0.007
+ YEAR_4         0.068         0.004        -0.005        -0.039         0.038
+ LIFETIME       0.003         0.051        -0.353         0.030        -0.031
+ PRTAGEM        0.011         0.067        -0.380         0.589        -0.291
+ PRTSEXM       -0.005        -0.038         0.148        -0.038         0.137
+ PRTMARRM      -0.028         0.044        -0.154         0.137        -0.159
+ PRTEDUM1      -0.116         0.063        -0.140         0.113        -0.102
+ PRTHKM        -0.142         0.079        -0.026        -0.020        -0.029
+ PRTPTM         0.116        -0.034         0.035         0.023         0.030
+
+
+           Correlations
+              SIBM_3        HKM           INTMM1        INTMM3        INTMF1
+              ________      ________      ________      ________      ________
+ SIBM_3         1.000
+ HKM           -0.050         1.000
+ INTMM1        -0.070        -0.146         1.000
+ INTMM3         0.174        -0.147        -0.014         1.000
+ INTMF1         0.035        -0.142         0.328         0.362         1.000
+ INTMF3         0.043        -0.128         0.319         0.359        -0.018
+ INTFF1         0.074        -0.184         0.132         0.136         0.322
+ INTFF3        -0.012        -0.126         0.163         0.100         0.011
+ INTFM1         0.096        -0.139         0.380         0.019         0.137
+ INTFM3        -0.103        -0.198         0.011         0.306         0.130
+ PRTAGEF       -0.241        -0.085         0.006        -0.046        -0.046
+ PRTSEXF        0.083         0.002        -0.037         0.030         0.027
+ PRTMARRF      -0.043         0.005         0.020        -0.014        -0.036
+ PRTEDUF1      -0.080         0.169        -0.043        -0.092        -0.123
+ PRTHKF        -0.027         0.443        -0.104        -0.068        -0.115
+ PRTPTF        -0.002        -0.149         0.018         0.031         0.026
+ CHILD_SD      -0.035         0.310        -0.124        -0.084        -0.082
+ FINCC_SD       0.034        -0.145         0.125         0.130         0.117
+ URBAN         -0.030         0.416        -0.132        -0.097        -0.123
+ PROV_1         0.086        -0.103         0.099         0.104         0.076
+ YEAR_2        -0.006         0.006         0.011         0.012         0.019
+ YEAR_3         0.007        -0.001         0.015         0.033         0.033
+ YEAR_4         0.014        -0.017         0.057         0.041         0.044
+ LIFETIME      -0.220        -0.078         0.011        -0.048        -0.010
+ PRTAGEM       -0.016        -0.116        -0.013        -0.010        -0.006
+ PRTSEXM        0.018         0.028         0.030         0.022         0.039
+ PRTMARRM       0.026        -0.010        -0.038        -0.012        -0.025
+ PRTEDUM1      -0.037         0.153        -0.084        -0.053        -0.047
+ PRTHKM        -0.048         0.632        -0.150        -0.093        -0.116
+ PRTPTM         0.003        -0.164         0.057         0.009         0.047
+
+
+           Correlations
+              INTMF3        INTFF1        INTFF3        INTFM1        INTFM3
+              ________      ________      ________      ________      ________
+ INTMF3         1.000
+ INTFF1         0.018         1.000
+ INTFF3         0.338        -0.003         1.000
+ INTFM1         0.173         0.332         0.326         1.000
+ INTFM3         0.101         0.372         0.370         0.001         1.000
+ PRTAGEF        0.026         0.038        -0.022        -0.033         0.016
+ PRTSEXF       -0.019         0.015        -0.002         0.018         0.024
+ PRTMARRF       0.030         0.025        -0.005        -0.017        -0.011
+ PRTEDUF1      -0.039        -0.099        -0.083        -0.109        -0.112
+ PRTHKF        -0.070        -0.127        -0.074        -0.091        -0.119
+ PRTPTF         0.028         0.045         0.045         0.046         0.080
+ CHILD_SD      -0.113        -0.127        -0.114        -0.137        -0.144
+ FINCC_SD       0.116         0.142         0.114         0.126         0.145
+ URBAN         -0.098        -0.151        -0.125        -0.147        -0.143
+ PROV_1         0.110         0.129         0.091         0.118         0.104
+ YEAR_2         0.008         0.002         0.011         0.004         0.008
+ YEAR_3         0.021         0.024         0.017         0.017         0.014
+ YEAR_4         0.041         0.054         0.029         0.044         0.046
+ LIFETIME      -0.028        -0.006         0.020        -0.014         0.039
+ PRTAGEM       -0.017        -0.013         0.009         0.036         0.003
+ PRTSEXM        0.017         0.040         0.014         0.015         0.039
+ PRTMARRM      -0.022        -0.044        -0.034        -0.016        -0.049
+ PRTEDUM1      -0.060        -0.050        -0.059        -0.063        -0.091
+ PRTHKM        -0.107        -0.135        -0.109        -0.121        -0.148
+ PRTPTM         0.013         0.036         0.058         0.042         0.069
+
+
+           Correlations
+              PRTAGEF       PRTSEXF       PRTMARRF      PRTEDUF1      PRTHKF
+              ________      ________      ________      ________      ________
+ PRTAGEF        1.000
+ PRTSEXF       -0.217         1.000
+ PRTMARRF       0.215        -0.515         1.000
+ PRTEDUF1       0.191        -0.247         0.149         1.000
+ PRTHKF        -0.072        -0.051         0.092         0.218         1.000
+ PRTPTF         0.062         0.172        -0.080        -0.204        -0.197
+ CHILD_SD      -0.033        -0.003         0.038         0.111         0.234
+ FINCC_SD       0.058         0.006         0.030        -0.117        -0.091
+ URBAN         -0.083        -0.026         0.008         0.130         0.278
+ PROV_1         0.048        -0.025         0.027        -0.079        -0.074
+ YEAR_2         0.008         0.007        -0.024         0.022        -0.004
+ YEAR_3         0.035         0.003        -0.044        -0.011         0.010
+ YEAR_4         0.075        -0.015         0.056        -0.047         0.002
+ LIFETIME       0.681        -0.222         0.150         0.151        -0.078
+ PRTAGEM        0.657        -0.225         0.167         0.130        -0.106
+ PRTSEXM       -0.245         0.154        -0.086        -0.091         0.015
+ PRTMARRM       0.211        -0.137         0.109         0.089        -0.006
+ PRTEDUM1       0.178        -0.104         0.050         0.251         0.122
+ PRTHKM        -0.065        -0.008         0.001         0.144         0.417
+ PRTPTM         0.007         0.040        -0.020        -0.086        -0.121
+
+
+           Correlations
+              PRTPTF        CHILD_SD      FINCC_SD      URBAN         PROV_1
+              ________      ________      ________      ________      ________
+ PRTPTF         1.000
+ CHILD_SD      -0.077         1.000
+ FINCC_SD       0.042        -0.040         1.000
+ URBAN         -0.123         0.230        -0.153         1.000
+ PROV_1         0.033        -0.165         0.101        -0.110         1.000
+ YEAR_2         0.003         0.017        -0.206        -0.011         0.006
+ YEAR_3        -0.008         0.047        -0.140         0.006        -0.013
+ YEAR_4         0.004         0.036         0.854        -0.028         0.007
+ LIFETIME       0.043        -0.046         0.062        -0.068         0.029
+ PRTAGEM        0.035        -0.032         0.050        -0.068         0.020
+ PRTSEXM       -0.012        -0.015         0.029         0.017         0.003
+ PRTMARRM      -0.001         0.009        -0.026        -0.004        -0.015
+ PRTEDUM1      -0.044         0.083        -0.116         0.090        -0.032
+ PRTHKM        -0.122         0.249        -0.100         0.334        -0.073
+ PRTPTM         0.109        -0.069         0.041        -0.067         0.000
+
+
+           Correlations
+              YEAR_2        YEAR_3        YEAR_4        LIFETIME      PRTAGEM
+              ________      ________      ________      ________      ________
+ YEAR_2         1.000
+ YEAR_3        -0.316         1.000
+ YEAR_4        -0.280        -0.230         1.000
+ LIFETIME      -0.004         0.022         0.091         1.000
+ PRTAGEM        0.003         0.028         0.074         0.639         1.000
+ PRTSEXM       -0.008         0.011         0.007        -0.242        -0.282
+ PRTMARRM      -0.012        -0.036         0.015         0.220         0.313
+ PRTEDUM1       0.013        -0.014        -0.048         0.195         0.257
+ PRTHKM         0.000         0.000         0.009        -0.059        -0.084
+ PRTPTM        -0.005         0.011        -0.001         0.024         0.027
+
+
+           Correlations
+              PRTSEXM       PRTMARRM      PRTEDUM1      PRTHKM        PRTPTM
+              ________      ________      ________      ________      ________
+ PRTSEXM        1.000
+ PRTMARRM      -0.661         1.000
+ PRTEDUM1      -0.263         0.216         1.000
+ PRTHKM        -0.023         0.041         0.217         1.000
+ PRTPTM         0.206        -0.141        -0.184        -0.200         1.000
+
+
+     MAXIMUM LOG-LIKELIHOOD VALUE FOR THE UNRESTRICTED (H1) MODEL IS -272135.510
+
+
+UNIVARIATE SAMPLE STATISTICS
+
+
+     UNIVARIATE HIGHER-ORDER MOMENT DESCRIPTIVE STATISTICS
+
+         Variable/         Mean/     Skewness/   Minimum/ % with                Percentiles
+        Sample Size      Variance    Kurtosis    Maximum  Min/Max      20%/60%    40%/80%    Median
+
+     OP5F                  3.527      -0.233       1.000    2.80%       3.000      3.000      3.500
+            9028.000       0.957      -0.217       5.000   17.80%       4.000      4.000
+     INCCF_SD             -0.190       0.357      -1.006   57.78%      -1.006     -1.006     -1.006
+            9028.000       0.927      -1.824       1.461    0.04%       0.591      0.961
+     OP5M                  4.280      -1.231       1.000    1.50%       3.000      4.000      5.000
+            9028.000       1.000       0.640       5.000   58.27%       5.000      5.000
+     INCCM_SD              0.190      -0.332      -1.006   40.81%      -1.006     -1.006      0.889
+            9028.000       1.001      -1.841       1.461    0.07%       0.978      1.082
+     AGEF_SD              -0.110       0.031      -2.938    0.01%      -1.042     -0.364     -0.094
+            9028.000       1.016      -0.751       2.209    0.35%       0.177      0.855
+     EDUF_SD              -0.125      -0.299      -1.948   17.65%      -0.540     -0.540      0.164
+            9028.000       1.110      -0.409       2.510    0.19%       0.164      0.868
+     SIOPF_SD             -0.099      -0.650      -3.330    4.24%      -0.340     -0.183     -0.183
+            9028.000       1.085       2.739       2.807    0.65%      -0.183      0.446
+     HWF_SD                0.339       1.741      -1.144    2.33%      -0.329     -0.058      0.078
+            9028.000       0.936       5.368       8.631    0.01%       0.485      1.028
+     DW1F                  0.294       0.904       0.000   70.59%       0.000      0.000      0.000
+            9028.000       0.208      -1.183       1.000   29.41%       0.000      1.000
+     AGF_SD                0.012       0.762      -2.543    0.23%      -0.862     -0.301     -0.114
+            9028.000       1.041       0.935       5.863    0.01%       0.072      0.820
+     SIBF_1                0.351       0.625       0.000   64.91%       0.000      0.000      0.000
+            4397.000       0.228      -1.610       1.000   35.09%       0.000      1.000
+     SIBF_3                0.277       0.994       0.000   72.25%       0.000      0.000      0.000
+            4397.000       0.200      -1.012       1.000   27.75%       0.000      1.000
+     HKF                   0.747      -1.134       0.000   25.33%       0.000      1.000      1.000
+            9028.000       0.189      -0.713       1.000   74.67%       1.000      1.000
+     AGEM_SD               0.110      -0.031      -2.667    0.02%      -0.771     -0.229      0.177
+            9028.000       0.960      -0.734       2.209    0.78%       0.448      0.990
+     EDUM_SD               0.125      -0.421      -1.948    9.01%      -0.540      0.164      0.164
+            9028.000       0.858       0.399       2.510    0.31%       0.164      0.868
+     SIOPM_SD              0.099       0.755      -3.330    0.45%      -0.655     -0.183     -0.183
+            9028.000       0.895       0.949       2.807    0.86%      -0.183      0.682
+     HWM_SD               -0.339       2.681      -1.144   19.45%      -1.035     -0.601     -0.601
+            9028.000       0.834      10.382       8.631    0.01%      -0.465     -0.058
+     DW1M                  0.527      -0.107       0.000   47.32%       0.000      0.000      1.000
+            9028.000       0.249      -1.988       1.000   52.68%       1.000      1.000
+     AGM_SD               -0.012       0.765      -2.543    0.17%      -0.862     -0.301     -0.114
+            9028.000       0.959       0.962       5.116    0.01%       0.072      0.820
+     SIBM_1                0.331       0.717       0.000   66.86%       0.000      0.000      0.000
+            4397.000       0.222      -1.487       1.000   33.14%       0.000      1.000
+     SIBM_3                0.344       0.657       0.000   65.61%       0.000      0.000      0.000
+            4397.000       0.226      -1.568       1.000   34.39%       0.000      1.000
+     HKM                   0.727      -1.019       0.000   27.29%       0.000      1.000      1.000
+            9028.000       0.198      -0.961       1.000   72.71%       1.000      1.000
+     INTMM1                0.053       0.082      -1.006   14.06%       0.000      0.000      0.000
+            4397.000       0.342       0.124       1.422    0.02%       0.000      0.000
+     INTMM3                0.075       0.076      -1.006   13.53%       0.000      0.000      0.000
+            4397.000       0.352       0.025       1.461    0.02%       0.000      0.651
+     INTMF1                0.074       0.063      -1.006   13.94%       0.000      0.000      0.000
+            4397.000       0.358      -0.028       1.461    0.05%       0.000      0.707
+     INTMF3                0.066       0.175      -1.006   10.71%       0.000      0.000      0.000
+            4397.000       0.286       0.704       1.422    0.02%       0.000      0.000
+     INTFF1               -0.069      -0.055      -1.006   20.38%      -1.006      0.000      0.000
+            4397.000       0.332      -0.058       1.461    0.02%       0.000      0.000
+     INTFF3               -0.041      -0.096      -1.006   15.53%       0.000      0.000      0.000
+            4397.000       0.267       0.748       1.339    0.02%       0.000      0.000
+     INTFM1               -0.076      -0.064      -1.006   19.83%       0.000      0.000      0.000
+            4397.000       0.315       0.119       1.339    0.02%       0.000      0.000
+     INTFM3               -0.045      -0.051      -1.006   18.85%       0.000      0.000      0.000
+            4397.000       0.329       0.021       1.461    0.02%       0.000      0.000
+     PRTAGEF              69.553       0.087      44.000    0.01%      62.000     67.000     69.000
+            9028.000      86.741      -0.354     102.000    0.01%      72.000     78.000
+     PRTSEXF               0.734      -1.059       0.000   26.60%       0.000      1.000      1.000
+            9028.000       0.195      -0.878       1.000   73.40%       1.000      1.000
+     PRTMARRF              0.339       0.682       0.000   66.14%       0.000      0.000      0.000
+            9028.000       0.224      -1.535       1.000   33.86%       0.000      1.000
+     PRTEDUF1              0.698      -0.862       0.000   30.21%       0.000      1.000      1.000
+            9028.000       0.211      -1.257       1.000   69.79%       1.000      1.000
+     PRTHKF                0.838      -1.835       0.000   16.19%       1.000      1.000      1.000
+            9028.000       0.136       1.368       1.000   83.81%       1.000      1.000
+     PRTPTF                0.111       2.473       0.000   88.88%       0.000      0.000      0.000
+            9028.000       0.099       4.117       1.000   11.12%       0.000      0.000
+     CHILD_SD              0.000       1.089      -2.285    0.81%      -1.005      0.275      0.275
+            9028.000       1.000       3.168       6.674    0.04%       0.275      0.275
+     FINCC_SD              0.000       0.748      -3.347    0.08%      -0.735     -0.394     -0.248
+            9028.000       1.000      -0.087       1.889   17.02%      -0.103      0.607
+     URBAN                 0.496       0.016       0.000   50.41%       0.000      0.000      0.000
+            9028.000       0.250      -2.000       1.000   49.59%       1.000      1.000
+     PROV_1                0.393       0.438       0.000   60.70%       0.000      0.000      0.000
+            9028.000       0.239      -1.808       1.000   39.30%       0.000      1.000
+     YEAR_2                0.278       0.992       0.000   72.22%       0.000      0.000      0.000
+            9028.000       0.201      -1.016       1.000   27.78%       0.000      1.000
+     YEAR_3                0.206       1.455       0.000   79.41%       0.000      0.000      0.000
+            9028.000       0.164       0.116       1.000   20.59%       0.000      1.000
+     YEAR_4                0.170       1.761       0.000   83.04%       0.000      0.000      0.000
+            9028.000       0.141       1.101       1.000   16.96%       0.000      0.000
+     LIFETIME              0.604      -0.423       0.000   39.64%       0.000      1.000      1.000
+            9028.000       0.239      -1.821       1.000   60.36%       1.000      1.000
+     PRTAGEM              71.044       0.017      44.000    0.01%      63.000     69.000     71.000
+            9028.000      80.039      -0.393     101.000    0.01%      73.000     79.000
+     PRTSEXM               0.703      -0.886       0.000   29.74%       0.000      1.000      1.000
+            9028.000       0.209      -1.214       1.000   70.26%       1.000      1.000
+     PRTMARRM              0.346       0.649       0.000   65.44%       0.000      0.000      0.000
+            9028.000       0.226      -1.578       1.000   34.56%       0.000      1.000
+     PRTEDUM1              0.719      -0.973       0.000   28.12%       0.000      1.000      1.000
+            9028.000       0.202      -1.053       1.000   71.88%       1.000      1.000
+     PRTHKM                0.783      -1.374       0.000   21.69%       0.000      1.000      1.000
+            9028.000       0.170      -0.112       1.000   78.31%       1.000      1.000
+     PRTPTM                0.128       2.226       0.000   87.20%       0.000      0.000      0.000
+            9028.000       0.112       2.957       1.000   12.80%       0.000      0.000
+
+
+THE MODEL ESTIMATION TERMINATED NORMALLY
+
+
+
+MODEL FIT INFORMATION
+
+Number of Free Parameters                      463
+
+Loglikelihood
+
+          H0 Value                     -210561.205
+          H1 Value                     -123184.905
+
+Information Criteria
+
+          Akaike (AIC)                  422048.409
+          Bayesian (BIC)                425339.453
+          Sample-Size Adjusted BIC      423868.117
+            (n* = (n + 2) / 24)
+
+Chi-Square Test of Model Fit
+
+          Value                         174752.600
+          Degrees of Freedom                   632
+          P-Value                           0.0000
+
+RMSEA (Root Mean Square Error Of Approximation)
+
+          Estimate                           0.175
+          90 Percent C.I.                    0.174  0.175
+          Probability RMSEA <= .05           0.000
+
+CFI/TLI
+
+          CFI and TLI were not computed due to convergence problems in the
+          baseline model.
+
+SRMR (Standardized Root Mean Square Residual)
+
+          Value                              0.144
+
+
+
+MODEL RESULTS
+
+                                                    Two-Tailed
+                    Estimate       S.E.  Est./S.E.    P-Value
+
+ OP5M     ON
+    INCCM_SD          -0.119      0.014     -8.507      0.000
+    INCCF_SD           0.001      0.015      0.068      0.945
+    SIOPM_SD           0.018      0.012      1.460      0.144
+    SIOPF_SD           0.002      0.011      0.191      0.848
+    SIBM_1             0.046      0.041      1.126      0.260
+    SIBM_3             0.144      0.040      3.571      0.000
+    INTMM1             0.000      0.033     -0.002      0.999
+    INTMM3             0.092      0.029      3.201      0.001
+    INTFM1             0.003      0.037      0.078      0.938
+    INTFM3            -0.019      0.031     -0.615      0.538
+    AGEM_SD            0.213      0.440      0.485      0.628
+    EDUM_SD           -0.029      0.015     -2.002      0.045
+    HWM_SD             0.050      0.010      4.785      0.000
+    AGM_SD             0.126      0.321      0.393      0.694
+    CHILD_SD           0.007      0.011      0.620      0.535
+    DW1M               0.582      0.023     25.154      0.000
+    HKM                0.097      0.033      2.902      0.004
+    PRTAGEM           -0.021      0.060     -0.347      0.728
+    PRTSEXM           -0.056      0.032     -1.736      0.083
+    PRTMARRM           0.064      0.029      2.216      0.027
+    PRTEDUM1           0.111      0.023      4.779      0.000
+    PRTHKM            -0.221      0.032     -6.893      0.000
+    PRTPTM            -0.003      0.030     -0.086      0.932
+    FINCC_SD           0.014      0.021      0.682      0.495
+    URBAN              0.198      0.023      8.486      0.000
+    PROV_1             0.023      0.021      1.100      0.271
+    YEAR_2            -0.080      0.026     -3.065      0.002
+    YEAR_3            -0.100      0.030     -3.303      0.001
+    YEAR_4            -0.164      0.059     -2.787      0.005
+    LIFETIME          -0.010      0.032     -0.318      0.751
+
+ OP5F     ON
+    INCCM_SD          -0.002      0.013     -0.179      0.858
+    INCCF_SD          -0.080      0.014     -5.859      0.000
+    SIOPM_SD           0.000      0.010     -0.008      0.994
+    SIOPF_SD           0.025      0.010      2.554      0.011
+    SIBF_1             0.147      0.037      4.014      0.000
+    SIBF_3             0.125      0.036      3.464      0.001
+    INTFF1             0.003      0.027      0.091      0.927
+    INTFF3            -0.083      0.030     -2.766      0.006
+    INTMF1             0.005      0.029      0.193      0.847
+    INTMF3             0.047      0.031      1.519      0.129
+    AGEF_SD            0.886      0.863      1.027      0.304
+    EDUF_SD            0.052      0.013      3.981      0.000
+    HWF_SD             0.000      0.011      0.043      0.966
+    AGF_SD             0.598      0.626      0.956      0.339
+    CHILD_SD          -0.044      0.012     -3.750      0.000
+    DW1F               0.620      0.023     27.433      0.000
+    HKF                0.013      0.028      0.469      0.639
+    PRTAGEF           -0.109      0.117     -0.930      0.352
+    PRTSEXF           -0.168      0.028     -5.947      0.000
+    PRTMARRF          -0.105      0.024     -4.322      0.000
+    PRTEDUF1           0.003      0.023      0.141      0.887
+    PRTHKF            -0.248      0.030     -8.339      0.000
+    PRTPTF             0.031      0.031      0.984      0.325
+    FINCC_SD           0.010      0.023      0.447      0.655
+    URBAN              0.005      0.023      0.224      0.823
+    PROV_1             0.017      0.021      0.785      0.432
+    YEAR_2             0.024      0.026      0.957      0.339
+    YEAR_3             0.015      0.027      0.543      0.587
+    YEAR_4             0.025      0.060      0.423      0.672
+    LIFETIME           0.009      0.034      0.253      0.800
+
+ INCCM_SD ON
+    SIOPM_SD           0.005      0.012      0.408      0.683
+    SIOPF_SD           0.000      0.009     -0.010      0.992
+    EDUM_SD            0.167      0.012     13.545      0.000
+    AGEM_SD           -0.063      0.010     -6.009      0.000
+    HKM               -0.334      0.024    -13.686      0.000
+    YEAR_2             0.236      0.026      8.978      0.000
+    YEAR_3             0.273      0.029      9.528      0.000
+    YEAR_4             0.333      0.031     10.778      0.000
+
+ INCCF_SD ON
+    SIOPF_SD           0.184      0.008     23.297      0.000
+    SIOPM_SD          -0.008      0.011     -0.804      0.421
+    EDUF_SD            0.166      0.010     17.153      0.000
+    AGEF_SD           -0.075      0.009     -8.332      0.000
+    HKF               -0.371      0.024    -15.203      0.000
+    YEAR_2             0.134      0.022      6.035      0.000
+    YEAR_3             0.156      0.026      5.988      0.000
+    YEAR_4             0.239      0.030      7.994      0.000
+
+ OP5M     WITH
+    OP5F               0.069      0.009      7.280      0.000
+
+ SIOPM_SD WITH
+    SIOPF_SD           0.271      0.013     20.784      0.000
+    AGEF_SD           -0.003      0.009     -0.330      0.741
+    EDUF_SD            0.316      0.011     29.394      0.000
+    HWF_SD            -0.063      0.008     -7.378      0.000
+    DW1F               0.005      0.005      1.108      0.268
+    AGF_SD            -0.012      0.010     -1.190      0.234
+    SIBF_1             0.016      0.006      2.550      0.011
+    SIBF_3             0.017      0.007      2.533      0.011
+    HKF               -0.095      0.005    -18.855      0.000
+    AGEM_SD            0.006      0.010      0.643      0.520
+    EDUM_SD            0.345      0.010     35.937      0.000
+
+ INCCM_SD WITH
+    INCCF_SD           0.236      0.009     27.596      0.000
+
+ AGEF_SD  WITH
+    AGEM_SD            0.918      0.011     81.530      0.000
+
+ EDUF_SD  WITH
+    EDUM_SD            0.585      0.012     47.524      0.000
+    AGEF_SD           -0.174      0.011    -16.570      0.000
+
+ SIOPF_SD WITH
+    AGEF_SD            0.017      0.012      1.432      0.152
+    EDUF_SD            0.317      0.012     25.486      0.000
+
+ HWF_SD   WITH
+    HWM_SD             0.166      0.017      9.710      0.000
+    AGEF_SD            0.115      0.011     10.782      0.000
+    EDUF_SD           -0.168      0.011    -15.303      0.000
+    SIOPF_SD          -0.102      0.009    -11.188      0.000
+
+ DW1F     WITH
+    DW1M               0.044      0.002     18.755      0.000
+    AGEF_SD           -0.125      0.005    -27.571      0.000
+    EDUF_SD            0.055      0.005     11.511      0.000
+    SIOPF_SD           0.015      0.005      3.051      0.002
+    HWF_SD            -0.007      0.005     -1.548      0.122
+
+ AGF_SD   WITH
+    AGM_SD             0.093      0.011      8.194      0.000
+    AGEF_SD            0.019      0.011      1.686      0.092
+    EDUF_SD           -0.017      0.012     -1.387      0.166
+    SIOPF_SD          -0.003      0.012     -0.291      0.771
+    HWF_SD             0.005      0.011      0.438      0.662
+    DW1F              -0.030      0.005     -6.512      0.000
+
+ HKF      WITH
+    HKM                0.143      0.002     61.856      0.000
+    AGEF_SD           -0.039      0.004     -8.920      0.000
+    EDUF_SD           -0.201      0.005    -41.759      0.000
+    SIOPF_SD          -0.058      0.006     -9.842      0.000
+    HWF_SD             0.041      0.004      9.606      0.000
+    DW1F              -0.008      0.002     -3.912      0.000
+    AGF_SD            -0.009      0.005     -1.981      0.048
+    SIBF_1            -0.010      0.003     -3.443      0.001
+    SIBF_3            -0.009      0.003     -3.266      0.001
+
+ SIBF_1   WITH
+    AGEF_SD           -0.042      0.008     -5.416      0.000
+    EDUF_SD            0.032      0.007      4.399      0.000
+    SIOPF_SD           0.002      0.007      0.266      0.790
+    HWF_SD            -0.009      0.006     -1.372      0.170
+    DW1F               0.016      0.003      4.926      0.000
+    AGF_SD            -0.230      0.006    -36.089      0.000
+
+ SIBF_3   WITH
+    AGEF_SD           -0.078      0.007    -11.386      0.000
+    EDUF_SD            0.063      0.007      9.487      0.000
+    SIOPF_SD           0.025      0.007      3.472      0.001
+    HWF_SD            -0.022      0.006     -3.818      0.000
+    DW1F               0.008      0.003      2.628      0.009
+    AGF_SD             0.163      0.007     24.423      0.000
+    SIBF_1            -0.098      0.002    -40.290      0.000
+
+ AGEM_SD  WITH
+    EDUF_SD           -0.178      0.010    -16.963      0.000
+    SIOPF_SD           0.003      0.011      0.242      0.809
+    HWF_SD             0.115      0.010     11.159      0.000
+    DW1F              -0.115      0.005    -25.493      0.000
+    AGF_SD             0.047      0.011      4.388      0.000
+    SIBF_1            -0.032      0.008     -4.183      0.000
+    SIBF_3            -0.067      0.007     -9.674      0.000
+    HKF               -0.045      0.004    -10.385      0.000
+
+ EDUM_SD  WITH
+    AGEF_SD           -0.063      0.009     -6.729      0.000
+    SIOPF_SD           0.205      0.011     18.935      0.000
+    HWF_SD            -0.119      0.010    -12.067      0.000
+    DW1F               0.028      0.004      6.648      0.000
+    AGF_SD            -0.018      0.010     -1.803      0.071
+    SIBF_1             0.027      0.006      4.347      0.000
+    SIBF_3             0.032      0.006      5.230      0.000
+    HKF               -0.156      0.004    -36.570      0.000
+    AGEM_SD           -0.070      0.009     -7.653      0.000
+
+ HWM_SD   WITH
+    AGEF_SD            0.064      0.010      6.371      0.000
+    EDUF_SD           -0.154      0.011    -14.293      0.000
+    SIOPF_SD          -0.011      0.008     -1.417      0.156
+    DW1F              -0.001      0.005     -0.127      0.899
+    AGF_SD            -0.014      0.010     -1.300      0.194
+    SIBF_1             0.008      0.007      1.186      0.236
+    SIBF_3            -0.014      0.006     -2.460      0.014
+    HKF                0.039      0.003     11.568      0.000
+    AGEM_SD            0.077      0.009      8.121      0.000
+    EDUM_SD           -0.119      0.010    -11.750      0.000
+    SIOPM_SD          -0.047      0.007     -6.568      0.000
+
+ DW1M     WITH
+    AGEF_SD           -0.204      0.005    -43.079      0.000
+    EDUF_SD            0.052      0.005      9.498      0.000
+    SIOPF_SD           0.011      0.005      2.073      0.038
+    HWF_SD            -0.039      0.005     -7.658      0.000
+    AGF_SD            -0.001      0.005     -0.187      0.851
+    SIBF_1             0.004      0.003      1.342      0.180
+    SIBF_3             0.022      0.003      6.782      0.000
+    HKF                0.010      0.002      4.311      0.000
+    AGEM_SD           -0.201      0.005    -43.743      0.000
+    EDUM_SD            0.031      0.005      6.659      0.000
+    SIOPM_SD           0.002      0.005      0.324      0.746
+    HWM_SD             0.003      0.005      0.679      0.497
+
+ AGM_SD   WITH
+    AGEF_SD            0.003      0.010      0.260      0.795
+    EDUF_SD           -0.006      0.011     -0.514      0.607
+    SIOPF_SD           0.000      0.010      0.029      0.977
+    HWF_SD             0.015      0.011      1.391      0.164
+    DW1F               0.000      0.005     -0.076      0.939
+    SIBF_1            -0.006      0.006     -0.904      0.366
+    SIBF_3            -0.010      0.006     -1.527      0.127
+    HKF               -0.011      0.004     -2.575      0.010
+    AGEM_SD            0.001      0.010      0.109      0.913
+    EDUM_SD           -0.019      0.010     -1.927      0.054
+    SIOPM_SD           0.010      0.009      1.069      0.285
+    HWM_SD            -0.004      0.010     -0.437      0.662
+    DW1M              -0.039      0.005     -7.455      0.000
+
+ SIBM_1   WITH
+    AGEF_SD            0.002      0.007      0.302      0.763
+    EDUF_SD            0.019      0.007      2.539      0.011
+    SIOPF_SD           0.015      0.007      1.994      0.046
+    HWF_SD            -0.009      0.006     -1.485      0.137
+    DW1F              -0.005      0.003     -1.420      0.155
+    AGF_SD             0.000      0.007      0.010      0.992
+    SIBF_1            -0.002      0.003     -0.671      0.502
+    SIBF_3             0.006      0.003      1.996      0.046
+    HKF                0.004      0.003      1.194      0.233
+    AGEM_SD           -0.004      0.007     -0.577      0.564
+    EDUM_SD            0.025      0.006      4.095      0.000
+    SIOPM_SD          -0.006      0.006     -0.970      0.332
+    HWM_SD            -0.008      0.006     -1.350      0.177
+    DW1M               0.011      0.003      3.120      0.002
+    AGM_SD            -0.218      0.006    -35.635      0.000
+
+ SIBM_3   WITH
+    AGEF_SD           -0.133      0.007    -19.326      0.000
+    EDUF_SD            0.067      0.007      9.928      0.000
+    SIOPF_SD           0.001      0.007      0.081      0.935
+    HWF_SD            -0.017      0.006     -2.799      0.005
+    DW1F               0.018      0.003      5.436      0.000
+    AGF_SD            -0.009      0.007     -1.330      0.184
+    SIBF_1             0.009      0.003      2.812      0.005
+    SIBF_3             0.018      0.003      5.309      0.000
+    HKF               -0.012      0.003     -4.452      0.000
+    AGEM_SD           -0.137      0.007    -20.150      0.000
+    EDUM_SD            0.038      0.006      6.143      0.000
+    SIOPM_SD           0.016      0.007      2.478      0.013
+    HWM_SD            -0.014      0.006     -2.347      0.019
+    DW1M               0.033      0.003      9.804      0.000
+    AGM_SD             0.182      0.007     27.061      0.000
+    SIBM_1            -0.112      0.003    -44.483      0.000
+
+ HKM      WITH
+    AGEF_SD           -0.041      0.004     -9.033      0.000
+    EDUF_SD           -0.201      0.005    -41.111      0.000
+    SIOPF_SD          -0.054      0.006     -8.906      0.000
+    HWF_SD             0.044      0.004     10.376      0.000
+    DW1F              -0.006      0.002     -2.809      0.005
+    AGF_SD            -0.010      0.005     -2.134      0.033
+    SIBF_1            -0.011      0.003     -3.500      0.000
+    SIBF_3            -0.007      0.003     -2.442      0.015
+    AGEM_SD           -0.050      0.004    -11.145      0.000
+    EDUM_SD           -0.184      0.004    -42.207      0.000
+    SIOPM_SD          -0.106      0.005    -20.935      0.000
+    HWM_SD             0.039      0.004     11.162      0.000
+    DW1M               0.009      0.002      3.765      0.000
+    AGM_SD            -0.017      0.004     -3.782      0.000
+    SIBM_1             0.000      0.003      0.092      0.927
+    SIBM_3            -0.011      0.003     -3.729      0.000
+
+ INTMM1   WITH
+    AGEF_SD            0.007      0.009      0.757      0.449
+    EDUF_SD            0.108      0.010     11.295      0.000
+    SIOPF_SD           0.034      0.009      3.768      0.000
+    HWF_SD            -0.036      0.008     -4.733      0.000
+    DW1F              -0.008      0.004     -1.817      0.069
+    AGF_SD            -0.001      0.009     -0.135      0.892
+    SIBF_1             0.006      0.004      1.377      0.169
+    SIBF_3             0.011      0.004      2.611      0.009
+    HKF               -0.040      0.004    -10.265      0.000
+    AGEM_SD            0.004      0.009      0.418      0.676
+    EDUM_SD            0.080      0.008      9.898      0.000
+    SIOPM_SD           0.061      0.008      7.384      0.000
+    HWM_SD            -0.047      0.007     -6.373      0.000
+    DW1M               0.003      0.004      0.735      0.462
+    AGM_SD            -0.004      0.008     -0.507      0.612
+    SIBM_1             0.035      0.006      6.144      0.000
+    SIBM_3            -0.017      0.003     -5.965      0.000
+    HKM               -0.041      0.004    -10.512      0.000
+
+ INTMM3   WITH
+    AGEF_SD           -0.026      0.010     -2.706      0.007
+    EDUF_SD            0.098      0.009     11.094      0.000
+    SIOPF_SD           0.027      0.009      2.870      0.004
+    HWF_SD            -0.024      0.008     -3.173      0.002
+    DW1F               0.010      0.004      2.306      0.021
+    AGF_SD            -0.007      0.009     -0.854      0.393
+    SIBF_1             0.011      0.004      2.408      0.016
+    SIBF_3             0.013      0.004      3.292      0.001
+    HKF               -0.035      0.004     -9.353      0.000
+    AGEM_SD           -0.028      0.009     -2.918      0.004
+    EDUM_SD            0.080      0.008     10.275      0.000
+    SIOPM_SD           0.034      0.009      3.774      0.000
+    HWM_SD            -0.050      0.008     -6.587      0.000
+    DW1M               0.009      0.004      2.156      0.031
+    AGM_SD             0.040      0.010      4.048      0.000
+    SIBM_1            -0.025      0.003     -8.423      0.000
+    SIBM_3             0.050      0.006      8.758      0.000
+    HKM               -0.042      0.004    -10.430      0.000
+    INTMM1            -0.003      0.001     -4.143      0.000
+
+ INTMF1   WITH
+    AGEF_SD           -0.010      0.010     -1.040      0.298
+    EDUF_SD            0.109      0.010     11.351      0.000
+    SIOPF_SD           0.019      0.009      2.054      0.040
+    HWF_SD            -0.024      0.008     -2.913      0.004
+    DW1F               0.006      0.005      1.298      0.194
+    AGF_SD            -0.037      0.009     -4.316      0.000
+    SIBF_1             0.049      0.006      8.483      0.000
+    SIBF_3            -0.020      0.003     -8.037      0.000
+    HKF               -0.038      0.004     -9.609      0.000
+    AGEM_SD           -0.012      0.009     -1.244      0.213
+    EDUM_SD            0.087      0.008     10.843      0.000
+    SIOPM_SD           0.061      0.009      7.103      0.000
+    HWM_SD            -0.047      0.008     -6.228      0.000
+    DW1M               0.006      0.004      1.340      0.180
+    AGM_SD             0.017      0.009      1.893      0.058
+    SIBM_1             0.000      0.004     -0.094      0.925
+    SIBM_3             0.012      0.004      2.677      0.007
+    HKM               -0.041      0.004    -10.254      0.000
+    INTMM1             0.116      0.005     22.721      0.000
+    INTMM3             0.130      0.005     24.486      0.000
+
+ INTMF3   WITH
+    AGEF_SD           -0.003      0.008     -0.423      0.672
+    EDUF_SD            0.098      0.009     11.458      0.000
+    SIOPF_SD           0.039      0.009      4.476      0.000
+    HWF_SD            -0.020      0.007     -2.888      0.004
+    DW1F              -0.003      0.004     -0.703      0.482
+    AGF_SD             0.035      0.009      3.797      0.000
+    SIBF_1            -0.023      0.003     -8.481      0.000
+    SIBF_3             0.048      0.006      8.716      0.000
+    HKF               -0.035      0.004     -9.891      0.000
+    AGEM_SD           -0.010      0.008     -1.187      0.235
+    EDUM_SD            0.064      0.007      8.786      0.000
+    SIOPM_SD           0.039      0.008      4.649      0.000
+    HWM_SD            -0.027      0.007     -3.962      0.000
+    DW1M               0.002      0.004      0.473      0.636
+    AGM_SD             0.012      0.008      1.495      0.135
+    SIBM_1             0.003      0.004      0.871      0.384
+    SIBM_3             0.012      0.004      3.083      0.002
+    HKM               -0.033      0.004     -9.085      0.000
+    INTMM1             0.101      0.005     20.540      0.000
+    INTMM3             0.114      0.005     21.762      0.000
+    INTMF1            -0.004      0.001     -5.116      0.000
+
+ INTFF1   WITH
+    AGEF_SD           -0.015      0.010     -1.564      0.118
+    EDUF_SD            0.141      0.010     14.574      0.000
+    SIOPF_SD           0.095      0.009     10.106      0.000
+    HWF_SD            -0.058      0.008     -7.552      0.000
+    DW1F               0.010      0.004      2.307      0.021
+    AGF_SD             0.059      0.008      7.513      0.000
+    SIBF_1            -0.044      0.005     -8.070      0.000
+    SIBF_3             0.020      0.002      8.215      0.000
+    HKF               -0.049      0.004    -12.800      0.000
+    AGEM_SD           -0.023      0.009     -2.492      0.013
+    EDUM_SD            0.094      0.008     11.463      0.000
+    SIOPM_SD           0.047      0.009      5.419      0.000
+    HWM_SD            -0.040      0.008     -5.160      0.000
+    DW1M               0.012      0.004      2.712      0.007
+    AGM_SD             0.016      0.009      1.918      0.055
+    SIBM_1             0.001      0.004      0.187      0.852
+    SIBM_3             0.021      0.004      4.879      0.000
+    HKM               -0.048      0.004    -12.349      0.000
+    INTMM1             0.044      0.005      8.616      0.000
+    INTMM3             0.046      0.005      8.613      0.000
+    INTMF1             0.111      0.009     12.867      0.000
+    INTMF3             0.005      0.001      5.943      0.000
+
+ INTFF3   WITH
+    AGEF_SD            0.014      0.008      1.890      0.059
+    EDUF_SD            0.099      0.008     11.923      0.000
+    SIOPF_SD           0.093      0.008     10.916      0.000
+    HWF_SD            -0.051      0.007     -7.414      0.000
+    DW1F              -0.008      0.004     -2.137      0.033
+    AGF_SD            -0.040      0.009     -4.510      0.000
+    SIBF_1             0.015      0.003      5.563      0.000
+    SIBF_3            -0.030      0.005     -5.441      0.000
+    HKF               -0.033      0.004     -9.033      0.000
+    AGEM_SD            0.004      0.008      0.518      0.605
+    EDUM_SD            0.064      0.007      8.944      0.000
+    SIOPM_SD           0.057      0.008      6.847      0.000
+    HWM_SD            -0.019      0.006     -2.916      0.004
+    DW1M               0.004      0.004      0.952      0.341
+    AGM_SD             0.000      0.007     -0.017      0.986
+    SIBM_1             0.008      0.004      2.004      0.045
+    SIBM_3            -0.003      0.004     -0.703      0.482
+    HKM               -0.030      0.004     -7.995      0.000
+    INTMM1             0.050      0.005     10.204      0.000
+    INTMM3             0.031      0.005      6.208      0.000
+    INTMF1             0.004      0.001      5.004      0.000
+    INTMF3             0.094      0.008     11.729      0.000
+    INTFF1            -0.002      0.001     -3.278      0.001
+
+ INTFM1   WITH
+    AGEF_SD           -0.033      0.009     -3.534      0.000
+    EDUF_SD            0.128      0.009     13.505      0.000
+    SIOPF_SD           0.106      0.009     11.790      0.000
+    HWF_SD            -0.057      0.007     -8.285      0.000
+    DW1F               0.000      0.004      0.124      0.901
+    AGF_SD             0.010      0.008      1.177      0.239
+    SIBF_1             0.005      0.004      1.142      0.253
+    SIBF_3             0.015      0.004      3.730      0.000
+    HKF               -0.041      0.004    -11.371      0.000
+    AGEM_SD           -0.035      0.009     -3.813      0.000
+    EDUM_SD            0.082      0.008     10.568      0.000
+    SIOPM_SD           0.058      0.008      7.459      0.000
+    HWM_SD            -0.024      0.007     -3.395      0.001
+    DW1M               0.007      0.004      1.831      0.067
+    AGM_SD             0.078      0.007     10.408      0.000
+    SIBM_1            -0.050      0.005     -9.431      0.000
+    SIBM_3             0.026      0.003      9.601      0.000
+    HKM               -0.036      0.004     -9.466      0.000
+    INTMM1             0.126      0.008     15.462      0.000
+    INTMM3             0.006      0.001      6.879      0.000
+    INTMF1             0.047      0.005      9.089      0.000
+    INTMF3             0.052      0.005     10.800      0.000
+    INTFF1             0.106      0.005     22.202      0.000
+    INTFF3             0.094      0.005     20.294      0.000
+
+ INTFM3   WITH
+    AGEF_SD            0.025      0.009      2.792      0.005
+    EDUF_SD            0.117      0.009     12.987      0.000
+    SIOPF_SD           0.112      0.010     11.676      0.000
+    HWF_SD            -0.072      0.007     -9.903      0.000
+    DW1F               0.002      0.004      0.438      0.661
+    AGF_SD            -0.019      0.009     -2.234      0.025
+    SIBF_1             0.012      0.004      3.003      0.003
+    SIBF_3            -0.005      0.004     -1.321      0.186
+    HKF               -0.042      0.004    -10.758      0.000
+    AGEM_SD            0.030      0.009      3.362      0.001
+    EDUM_SD            0.088      0.008     11.297      0.000
+    SIOPM_SD           0.052      0.009      5.989      0.000
+    HWM_SD            -0.029      0.007     -4.174      0.000
+    DW1M               0.008      0.004      1.819      0.069
+    AGM_SD            -0.042      0.009     -4.710      0.000
+    SIBM_1             0.015      0.003      5.016      0.000
+    SIBM_3            -0.028      0.006     -4.989      0.000
+    HKM               -0.051      0.004    -12.588      0.000
+    INTMM1             0.003      0.001      3.909      0.000
+    INTMM3             0.104      0.008     12.341      0.000
+    INTMF1             0.044      0.005      8.258      0.000
+    INTMF3             0.031      0.005      6.048      0.000
+    INTFF1             0.122      0.005     23.985      0.000
+    INTFF3             0.108      0.005     21.956      0.000
+    INTFM1            -0.003      0.001     -3.258      0.001
+
+ Means
+    AGEF_SD           -0.110      0.010    -10.602      0.000
+    EDUF_SD           -0.125      0.011    -11.474      0.000
+    SIOPF_SD          -0.099      0.011     -8.802      0.000
+    HWF_SD             0.339      0.010     34.054      0.000
+    DW1F               0.294      0.005     61.385      0.000
+    AGF_SD             0.012      0.011      1.068      0.286
+    SIBF_1             0.358      0.007     52.033      0.000
+    SIBF_3             0.297      0.007     42.452      0.000
+    HKF                0.747      0.005    165.786      0.000
+    AGEM_SD            0.110      0.010     10.849      0.000
+    EDUM_SD            0.125      0.009     13.355      0.000
+    SIOPM_SD           0.099      0.010      9.974      0.000
+    HWM_SD            -0.339      0.009    -36.054      0.000
+    DW1M               0.527      0.005     96.922      0.000
+    AGM_SD            -0.012      0.011     -1.113      0.266
+    SIBM_1             0.333      0.007     47.421      0.000
+    SIBM_3             0.376      0.007     53.581      0.000
+    HKM                0.727      0.005    156.973      0.000
+    INTMM1             0.051      0.009      5.726      0.000
+    INTMM3             0.084      0.010      8.542      0.000
+    INTMF1             0.077      0.009      8.316      0.000
+    INTMF3             0.068      0.008      8.034      0.000
+    INTFF1            -0.062      0.009     -6.950      0.000
+    INTFF3            -0.045      0.008     -5.448      0.000
+    INTFM1            -0.068      0.008     -8.132      0.000
+    INTFM3            -0.048      0.010     -5.061      0.000
+
+ Intercepts
+    OP5F              11.204      8.201      1.366      0.172
+    INCCF_SD           0.010      0.022      0.429      0.668
+    OP5M               5.401      4.198      1.287      0.198
+    INCCM_SD           0.240      0.025      9.667      0.000
+
+ Variances
+    AGEF_SD            1.016      0.012     85.556      0.000
+    EDUF_SD            1.110      0.015     75.283      0.000
+    SIOPF_SD           1.085      0.026     42.104      0.000
+    HWF_SD             0.936      0.027     35.104      0.000
+    DW1F               0.208      0.002    105.280      0.000
+    AGF_SD             1.041      0.019     55.466      0.000
+    SIBF_1             0.230      0.002     98.410      0.000
+    SIBF_3             0.202      0.003     65.006      0.000
+    HKF                0.189      0.002     85.095      0.000
+    AGEM_SD            0.960      0.012     82.560      0.000
+    EDUM_SD            0.858      0.014     61.211      0.000
+    SIOPM_SD           0.895      0.016     57.230      0.000
+    HWM_SD             0.834      0.030     28.032      0.000
+    DW1M               0.249      0.000    852.776      0.000
+    AGM_SD             0.959      0.017     55.335      0.000
+    SIBM_1             0.223      0.003     83.787      0.000
+    SIBM_3             0.225      0.002     96.604      0.000
+    HKM                0.198      0.002     94.301      0.000
+    INTMM1             0.342      0.008     45.268      0.000
+    INTMM3             0.352      0.007     47.059      0.000
+    INTMF1             0.359      0.007     48.639      0.000
+    INTMF3             0.286      0.007     39.742      0.000
+    INTFF1             0.333      0.007     48.893      0.000
+    INTFF3             0.268      0.007     39.400      0.000
+    INTFM1             0.316      0.007     44.658      0.000
+    INTFM3             0.330      0.007     46.528      0.000
+
+ Residual Variances
+    OP5F               0.843      0.013     65.882      0.000
+    INCCF_SD           0.751      0.007    106.223      0.000
+    OP5M               0.877      0.016     54.528      0.000
+    INCCM_SD           0.900      0.006    142.359      0.000
+
+New/Additional Parameters
+    HIW1M              1.000      0.000      0.000      1.000
+    MEDW1M             0.000      0.000      0.000      1.000
+    LOW1M              0.000      0.000      0.000      1.000
+    HIW3M              1.000      0.000      0.000      1.000
+    MEDW3M             0.000      0.000      0.000      1.000
+    LOW3M              0.000      0.000      0.000      1.000
+    HIW1F              1.000      0.000      0.000      1.000
+    MEDW1F             0.000      0.000      0.000      1.000
+    LOW1F              0.000      0.000      0.000      1.000
+    HIW3F              1.000      0.000      0.000      1.000
+    MEDW3F             0.000      0.000      0.000      1.000
+    LOW3F              0.000      0.000      0.000      1.000
+    HI0AAM1           -0.001      0.001     -0.396      0.692
+    MED0AAM1          -0.001      0.001     -0.410      0.682
+    LO0AAM1            0.000      0.000     -0.282      0.778
+    IM0AAM11           0.000      0.000     -0.001      0.999
+    IM0AAM12           0.000      0.000      0.000      1.000
+    IM0AAM13           0.000      0.001      0.401      0.688
+    HI0PAM1            0.001      0.006      0.118      0.906
+    MED0PAM1           0.000      0.003      0.069      0.945
+    LO0PAM1           -0.003      0.005     -0.661      0.509
+    IM0PAM11           0.001      0.007      0.078      0.937
+    IM0PAM12           0.000      0.000      0.000      1.000
+    IM0PAM13          -0.003      0.006     -0.615      0.539
+    HI0AAM2           -0.014      0.005     -3.109      0.002
+    MED0AAM2          -0.015      0.003     -5.686      0.000
+    LO0AAM2           -0.030      0.005     -5.584      0.000
+    IM0AAM21           0.000      0.005      0.091      0.927
+    IM0AAM22           0.000      0.000      0.000      1.000
+    IM0AAM23          -0.015      0.006     -2.720      0.007
+    HI0PAM2            0.000      0.000      0.047      0.962
+    MED0PAM2           0.000      0.000     -0.070      0.944
+    LO0PAM2            0.000      0.001      0.327      0.744
+    IM0PAM21           0.000      0.000      0.073      0.942
+    IM0PAM22           0.000      0.000      0.000      1.000
+    IM0PAM23           0.000      0.001      0.321      0.748
+    TIE0AAM1           0.000      0.001     -0.383      0.702
+    TIE0PAM1           0.004      0.007      0.538      0.590
+    TIE0AAM2           0.016      0.007      2.421      0.015
+    TIE0PAM2           0.000      0.001     -0.298      0.766
+    HI1AAM1            0.000      0.001      0.010      0.992
+    MED1AAM1           0.000      0.001      0.010      0.992
+    LO1AAM1            0.000      0.000      0.007      0.995
+    IM1AAM11           0.000      0.000      0.000      1.000
+    IM1AAM12           0.000      0.000      0.000      1.000
+    IM1AAM13           0.000      0.001     -0.010      0.992
+    HI1PAM1            0.000      0.000     -0.074      0.941
+    MED1PAM1           0.000      0.000     -0.046      0.963
+    LO1PAM1            0.000      0.000      0.353      0.724
+    IM1PAM11           0.000      0.000     -0.050      0.960
+    IM1PAM12           0.000      0.000      0.000      1.000
+    IM1PAM13           0.000      0.000      0.340      0.734
+    HI1AAM2            0.001      0.001      0.718      0.473
+    MED1AAM2           0.001      0.001      0.798      0.425
+    LO1AAM2            0.001      0.002      0.783      0.433
+    IM1AAM21           0.000      0.000     -0.058      0.954
+    IM1AAM22           0.000      0.000      0.000      1.000
+    IM1AAM23           0.001      0.001      0.714      0.475
+    HI1PAM2            0.000      0.000     -0.001      0.999
+    MED1PAM2           0.000      0.000      0.002      0.999
+    LO1PAM2            0.000      0.001     -0.008      0.994
+    IM1PAM21           0.000      0.000     -0.002      0.999
+    IM1PAM22           0.000      0.000      0.000      1.000
+    IM1PAM23           0.000      0.001     -0.008      0.994
+    TIE1AAM1           0.000      0.001      0.009      0.993
+    TIE1PAM1           0.000      0.001     -0.293      0.769
+    TIE1AAM2          -0.001      0.001     -0.729      0.466
+    TIE1PAM2           0.000      0.001      0.007      0.994
+
+
+CONFIDENCE INTERVALS OF MODEL RESULTS
+
+                  Lower .5%  Lower 2.5%    Lower 5%    Estimate    Upper 5%  Upper 2.5%   Upper .5%
+
+ OP5M     ON
+    INCCM_SD        -0.156      -0.150      -0.145      -0.119      -0.098      -0.094      -0.086
+    INCCF_SD        -0.037      -0.028      -0.022       0.001       0.027       0.033       0.042
+    SIOPM_SD        -0.014      -0.005      -0.002       0.018       0.039       0.042       0.049
+    SIOPF_SD        -0.025      -0.020      -0.016       0.002       0.021       0.024       0.034
+    SIBM_1          -0.063      -0.035      -0.025       0.046       0.111       0.124       0.142
+    SIBM_3           0.031       0.062       0.074       0.144       0.211       0.220       0.245
+    INTMM1          -0.092      -0.067      -0.054       0.000       0.053       0.064       0.078
+    INTMM3           0.017       0.035       0.045       0.092       0.140       0.146       0.163
+    INTFM1          -0.099      -0.076      -0.062       0.003       0.058       0.072       0.093
+    INTFM3          -0.099      -0.079      -0.072      -0.019       0.031       0.041       0.052
+    AGEM_SD         -1.606      -1.136      -0.836       0.213       0.514       0.568       1.053
+    EDUM_SD         -0.066      -0.057      -0.054      -0.029      -0.004       0.000       0.010
+    HWM_SD           0.023       0.031       0.033       0.050       0.067       0.070       0.076
+    AGM_SD          -1.175      -0.836      -0.623       0.126       0.349       0.392       0.756
+    CHILD_SD        -0.021      -0.014      -0.012       0.007       0.025       0.028       0.034
+    DW1M             0.520       0.534       0.542       0.582       0.619       0.627       0.642
+    HKM              0.004       0.028       0.038       0.097       0.148       0.158       0.179
+    PRTAGEM         -0.162      -0.070      -0.061      -0.021       0.120       0.159       0.219
+    PRTSEXM         -0.137      -0.121      -0.109      -0.056      -0.003       0.012       0.028
+    PRTMARRM        -0.012       0.007       0.011       0.064       0.108       0.115       0.133
+    PRTEDUM1         0.052       0.065       0.073       0.111       0.151       0.157       0.174
+    PRTHKM          -0.308      -0.285      -0.275      -0.221      -0.168      -0.162      -0.145
+    PRTPTM          -0.078      -0.060      -0.052      -0.003       0.046       0.054       0.068
+    FINCC_SD        -0.039      -0.028      -0.022       0.014       0.047       0.051       0.065
+    URBAN            0.142       0.154       0.161       0.198       0.238       0.245       0.263
+    PROV_1          -0.031      -0.019      -0.014       0.023       0.052       0.059       0.071
+    YEAR_2          -0.149      -0.135      -0.128      -0.080      -0.037      -0.031      -0.014
+    YEAR_3          -0.179      -0.161      -0.150      -0.100      -0.052      -0.040      -0.024
+    YEAR_4          -0.317      -0.275      -0.257      -0.164      -0.071      -0.055      -0.006
+    LIFETIME        -0.100      -0.076      -0.066      -0.010       0.038       0.047       0.073
+
+ OP5F     ON
+    INCCM_SD        -0.038      -0.031      -0.026      -0.002       0.018       0.022       0.031
+    INCCF_SD        -0.112      -0.105      -0.102      -0.080      -0.057      -0.053      -0.040
+    SIOPM_SD        -0.028      -0.020      -0.017       0.000       0.018       0.020       0.026
+    SIOPF_SD        -0.001       0.005       0.008       0.025       0.040       0.044       0.051
+    SIBF_1           0.048       0.071       0.085       0.147       0.206       0.214       0.240
+    SIBF_3           0.037       0.061       0.071       0.125       0.190       0.201       0.221
+    INTFF1          -0.066      -0.051      -0.043       0.003       0.048       0.056       0.069
+    INTFF3          -0.162      -0.140      -0.133      -0.083      -0.036      -0.025      -0.011
+    INTMF1          -0.077      -0.055      -0.044       0.005       0.052       0.060       0.072
+    INTMF3          -0.031      -0.013      -0.004       0.047       0.100       0.106       0.134
+    AGEF_SD         -2.691      -1.174      -0.448       0.886       2.080       2.336       2.700
+    EDUF_SD          0.020       0.026       0.030       0.052       0.074       0.078       0.086
+    HWF_SD          -0.028      -0.022      -0.018       0.000       0.019       0.022       0.028
+    AGF_SD          -2.030      -0.919      -0.430       0.598       1.422       1.616       1.939
+    CHILD_SD        -0.074      -0.066      -0.062      -0.044      -0.025      -0.022      -0.014
+    DW1F             0.562       0.579       0.584       0.620       0.659       0.667       0.679
+    HKF             -0.062      -0.045      -0.034       0.013       0.058       0.065       0.076
+    PRTAGEF         -0.386      -0.304      -0.270      -0.109       0.075       0.173       0.378
+    PRTSEXF         -0.247      -0.221      -0.214      -0.168      -0.119      -0.108      -0.092
+    PRTMARRF        -0.167      -0.148      -0.141      -0.105      -0.063      -0.056      -0.038
+    PRTEDUF1        -0.058      -0.042      -0.034       0.003       0.039       0.052       0.064
+    PRTHKF          -0.324      -0.308      -0.300      -0.248      -0.202      -0.190      -0.169
+    PRTPTF          -0.050      -0.028      -0.019       0.031       0.083       0.097       0.116
+    FINCC_SD        -0.053      -0.039      -0.032       0.010       0.046       0.053       0.066
+    URBAN           -0.054      -0.042      -0.032       0.005       0.041       0.052       0.062
+    PROV_1          -0.040      -0.023      -0.019       0.017       0.048       0.056       0.071
+    YEAR_2          -0.034      -0.022      -0.014       0.024       0.069       0.078       0.095
+    YEAR_3          -0.057      -0.037      -0.027       0.015       0.061       0.072       0.083
+    YEAR_4          -0.134      -0.082      -0.065       0.025       0.131       0.151       0.186
+    LIFETIME        -0.078      -0.057      -0.046       0.009       0.065       0.076       0.095
+
+ INCCM_SD ON
+    SIOPM_SD        -0.025      -0.017      -0.014       0.005       0.024       0.027       0.033
+    SIOPF_SD        -0.024      -0.018      -0.015       0.000       0.016       0.019       0.025
+    EDUM_SD          0.136       0.143       0.147       0.167       0.188       0.192       0.198
+    AGEM_SD         -0.090      -0.084      -0.080      -0.063      -0.045      -0.043      -0.038
+    HKM             -0.398      -0.383      -0.376      -0.334      -0.295      -0.287      -0.274
+    YEAR_2           0.175       0.186       0.195       0.236       0.281       0.288       0.303
+    YEAR_3           0.199       0.218       0.228       0.273       0.322       0.330       0.342
+    YEAR_4           0.250       0.276       0.284       0.333       0.381       0.389       0.416
+
+ INCCF_SD ON
+    SIOPF_SD         0.158       0.166       0.170       0.184       0.196       0.198       0.201
+    SIOPM_SD        -0.035      -0.028      -0.025      -0.008       0.009       0.012       0.018
+    EDUF_SD          0.140       0.147       0.151       0.166       0.182       0.185       0.191
+    AGEF_SD         -0.096      -0.093      -0.091      -0.075      -0.061      -0.058      -0.051
+    HKF             -0.430      -0.416      -0.410      -0.371      -0.327      -0.321      -0.310
+    YEAR_2           0.071       0.090       0.098       0.134       0.170       0.180       0.195
+    YEAR_3           0.093       0.107       0.116       0.156       0.200       0.209       0.229
+    YEAR_4           0.153       0.177       0.187       0.239       0.285       0.292       0.303
+
+ OP5M     WITH
+    OP5F             0.046       0.050       0.053       0.069       0.085       0.088       0.092
+
+ SIOPM_SD WITH
+    SIOPF_SD         0.241       0.247       0.250       0.271       0.294       0.297       0.305
+    AGEF_SD         -0.026      -0.020      -0.018      -0.003       0.012       0.015       0.021
+    EDUF_SD          0.287       0.295       0.299       0.316       0.335       0.338       0.343
+    HWF_SD          -0.085      -0.080      -0.078      -0.063      -0.050      -0.047      -0.041
+    DW1F            -0.007      -0.004      -0.003       0.005       0.012       0.013       0.016
+    AGF_SD          -0.038      -0.033      -0.028      -0.012       0.006       0.008       0.014
+    SIBF_1           0.000       0.003       0.005       0.016       0.026       0.028       0.032
+    SIBF_3          -0.002       0.003       0.006       0.017       0.027       0.029       0.033
+    HKF             -0.109      -0.105      -0.103      -0.095      -0.087      -0.085      -0.083
+    AGEM_SD         -0.018      -0.011      -0.009       0.006       0.022       0.024       0.030
+    EDUM_SD          0.323       0.327       0.330       0.345       0.361       0.364       0.371
+
+ INCCM_SD WITH
+    INCCF_SD         0.214       0.219       0.222       0.236       0.251       0.253       0.258
+
+ AGEF_SD  WITH
+    AGEM_SD          0.889       0.897       0.901       0.918       0.938       0.942       0.948
+
+ EDUF_SD  WITH
+    EDUM_SD          0.553       0.561       0.565       0.585       0.605       0.609       0.617
+    AGEF_SD         -0.201      -0.195      -0.192      -0.174      -0.156      -0.154      -0.150
+
+ SIOPF_SD WITH
+    AGEF_SD         -0.011      -0.006      -0.001       0.017       0.037       0.041       0.046
+    EDUF_SD          0.281       0.291       0.296       0.317       0.336       0.339       0.348
+
+ HWF_SD   WITH
+    HWM_SD           0.126       0.134       0.139       0.166       0.197       0.202       0.213
+    AGEF_SD          0.090       0.096       0.098       0.115       0.133       0.137       0.145
+    EDUF_SD         -0.196      -0.188      -0.186      -0.168      -0.150      -0.148      -0.139
+    SIOPF_SD        -0.125      -0.120      -0.117      -0.102      -0.087      -0.084      -0.078
+
+ DW1F     WITH
+    DW1M             0.037       0.038       0.039       0.044       0.047       0.048       0.049
+    AGEF_SD         -0.137      -0.134      -0.132      -0.125      -0.117      -0.116      -0.113
+    EDUF_SD          0.042       0.045       0.046       0.055       0.062       0.064       0.066
+    SIOPF_SD         0.002       0.005       0.007       0.015       0.023       0.025       0.028
+    HWF_SD          -0.018      -0.016      -0.014      -0.007       0.001       0.003       0.006
+
+ AGF_SD   WITH
+    AGM_SD           0.066       0.072       0.076       0.093       0.114       0.117       0.125
+    AGEF_SD         -0.010      -0.003       0.000       0.019       0.037       0.040       0.049
+    EDUF_SD         -0.049      -0.042      -0.037      -0.017       0.003       0.006       0.011
+    SIOPF_SD        -0.032      -0.025      -0.021      -0.003       0.017       0.020       0.027
+    HWF_SD          -0.023      -0.017      -0.013       0.005       0.024       0.027       0.031
+    DW1F            -0.040      -0.038      -0.037      -0.030      -0.022      -0.020      -0.017
+
+ HKF      WITH
+    HKM              0.137       0.138       0.139       0.143       0.147       0.147       0.148
+    AGEF_SD         -0.050      -0.048      -0.047      -0.039      -0.032      -0.031      -0.028
+    EDUF_SD         -0.213      -0.212      -0.210      -0.201      -0.194      -0.192      -0.190
+    SIOPF_SD        -0.076      -0.070      -0.068      -0.058      -0.049      -0.047      -0.043
+    HWF_SD           0.030       0.032       0.034       0.041       0.048       0.050       0.052
+    DW1F            -0.014      -0.012      -0.011      -0.008      -0.004      -0.004      -0.003
+    AGF_SD          -0.022      -0.018      -0.017      -0.009      -0.001       0.000       0.003
+    SIBF_1          -0.017      -0.015      -0.014      -0.010      -0.005      -0.003      -0.002
+    SIBF_3          -0.017      -0.015      -0.014      -0.009      -0.005      -0.004      -0.002
+
+ SIBF_1   WITH
+    AGEF_SD         -0.062      -0.057      -0.055      -0.042      -0.029      -0.026      -0.023
+    EDUF_SD          0.012       0.018       0.020       0.032       0.044       0.046       0.050
+    SIOPF_SD        -0.016      -0.012      -0.010       0.002       0.014       0.016       0.021
+    HWF_SD          -0.026      -0.022      -0.020      -0.009       0.001       0.003       0.006
+    DW1F             0.008       0.010       0.011       0.016       0.023       0.023       0.026
+    AGF_SD          -0.246      -0.242      -0.240      -0.230      -0.219      -0.217      -0.214
+
+ SIBF_3   WITH
+    AGEF_SD         -0.096      -0.092      -0.090      -0.078      -0.068      -0.066      -0.059
+    EDUF_SD          0.046       0.050       0.052       0.063       0.074       0.076       0.080
+    SIOPF_SD         0.006       0.010       0.014       0.025       0.036       0.038       0.042
+    HWF_SD          -0.035      -0.033      -0.031      -0.022      -0.012      -0.011      -0.008
+    DW1F             0.000       0.002       0.003       0.008       0.013       0.014       0.015
+    AGF_SD           0.147       0.150       0.152       0.163       0.174       0.177       0.180
+    SIBF_1          -0.104      -0.103      -0.102      -0.098      -0.094      -0.093      -0.092
+
+ AGEM_SD  WITH
+    EDUF_SD         -0.205      -0.198      -0.195      -0.178      -0.161      -0.159      -0.152
+    SIOPF_SD        -0.023      -0.018      -0.015       0.003       0.021       0.024       0.034
+    HWF_SD           0.089       0.095       0.098       0.115       0.131       0.136       0.141
+    DW1F            -0.127      -0.124      -0.122      -0.115      -0.108      -0.106      -0.103
+    AGF_SD           0.021       0.026       0.028       0.047       0.064       0.067       0.075
+    SIBF_1          -0.052      -0.047      -0.044      -0.032      -0.019      -0.016      -0.014
+    SIBF_3          -0.086      -0.082      -0.080      -0.067      -0.057      -0.055      -0.049
+    HKF             -0.056      -0.054      -0.053      -0.045      -0.039      -0.037      -0.033
+
+ EDUM_SD  WITH
+    AGEF_SD         -0.087      -0.080      -0.078      -0.063      -0.046      -0.044      -0.039
+    SIOPF_SD         0.177       0.185       0.189       0.205       0.223       0.226       0.232
+    HWF_SD          -0.143      -0.138      -0.135      -0.119      -0.103      -0.099      -0.093
+    DW1F             0.017       0.019       0.021       0.028       0.035       0.036       0.038
+    AGF_SD          -0.044      -0.038      -0.035      -0.018      -0.002       0.001       0.007
+    SIBF_1           0.011       0.015       0.017       0.027       0.038       0.040       0.044
+    SIBF_3           0.016       0.019       0.021       0.032       0.041       0.043       0.047
+    HKF             -0.168      -0.164      -0.163      -0.156      -0.149      -0.147      -0.145
+    AGEM_SD         -0.095      -0.088      -0.085      -0.070      -0.054      -0.051      -0.047
+
+ HWM_SD   WITH
+    AGEF_SD          0.039       0.045       0.048       0.064       0.081       0.085       0.089
+    EDUF_SD         -0.182      -0.177      -0.173      -0.154      -0.137      -0.135      -0.130
+    SIOPF_SD        -0.032      -0.026      -0.024      -0.011       0.003       0.005       0.009
+    DW1F            -0.012      -0.010      -0.008      -0.001       0.007       0.008       0.012
+    AGF_SD          -0.040      -0.033      -0.030      -0.014       0.005       0.008       0.015
+    SIBF_1          -0.008      -0.005      -0.003       0.008       0.018       0.020       0.025
+    SIBF_3          -0.030      -0.026      -0.024      -0.014      -0.005      -0.003       0.000
+    HKF              0.029       0.032       0.033       0.039       0.044       0.045       0.047
+    AGEM_SD          0.052       0.058       0.061       0.077       0.093       0.095       0.099
+    EDUM_SD         -0.147      -0.140      -0.136      -0.119      -0.103      -0.100      -0.094
+    SIOPM_SD        -0.066      -0.061      -0.058      -0.047      -0.036      -0.034      -0.028
+
+ DW1M     WITH
+    AGEF_SD         -0.216      -0.214      -0.213      -0.204      -0.197      -0.196      -0.193
+    EDUF_SD          0.036       0.040       0.042       0.052       0.060       0.062       0.065
+    SIOPF_SD        -0.005       0.000       0.002       0.011       0.020       0.021       0.025
+    HWF_SD          -0.051      -0.049      -0.048      -0.039      -0.031      -0.029      -0.026
+    AGF_SD          -0.014      -0.011      -0.009      -0.001       0.008       0.010       0.012
+    SIBF_1          -0.004      -0.002      -0.001       0.004       0.010       0.010       0.012
+    SIBF_3           0.014       0.016       0.017       0.022       0.028       0.029       0.031
+    HKF              0.004       0.005       0.006       0.010       0.013       0.014       0.015
+    AGEM_SD         -0.214      -0.211      -0.210      -0.201      -0.195      -0.193      -0.190
+    EDUM_SD          0.020       0.022       0.024       0.031       0.040       0.041       0.043
+    SIOPM_SD        -0.012      -0.009      -0.007       0.002       0.010       0.012       0.015
+    HWM_SD          -0.009      -0.006      -0.004       0.003       0.012       0.013       0.017
+
+ AGM_SD   WITH
+    AGEF_SD         -0.024      -0.018      -0.015       0.003       0.019       0.022       0.029
+    EDUF_SD         -0.039      -0.028      -0.025      -0.006       0.011       0.014       0.019
+    SIOPF_SD        -0.023      -0.018      -0.015       0.000       0.017       0.020       0.026
+    HWF_SD          -0.012      -0.004      -0.001       0.015       0.033       0.037       0.044
+    DW1F            -0.012      -0.010      -0.008       0.000       0.007       0.008       0.012
+    SIBF_1          -0.021      -0.018      -0.016      -0.006       0.005       0.007       0.010
+    SIBF_3          -0.028      -0.022      -0.020      -0.010       0.001       0.002       0.006
+    HKF             -0.022      -0.019      -0.018      -0.011      -0.004      -0.003       0.000
+    AGEM_SD         -0.025      -0.016      -0.014       0.001       0.018       0.021       0.027
+    EDUM_SD         -0.045      -0.038      -0.035      -0.019      -0.003       0.000       0.004
+    SIOPM_SD        -0.014      -0.007      -0.005       0.010       0.026       0.028       0.031
+    HWM_SD          -0.029      -0.024      -0.020      -0.004       0.012       0.014       0.020
+    DW1M            -0.052      -0.049      -0.047      -0.039      -0.031      -0.029      -0.025
+
+ SIBM_1   WITH
+    AGEF_SD         -0.015      -0.011      -0.008       0.002       0.015       0.017       0.021
+    EDUF_SD         -0.001       0.003       0.006       0.019       0.030       0.032       0.037
+    SIOPF_SD        -0.006       0.001       0.003       0.015       0.027       0.029       0.032
+    HWF_SD          -0.025      -0.022      -0.020      -0.009       0.000       0.002       0.006
+    DW1F            -0.014      -0.011      -0.010      -0.005       0.001       0.002       0.003
+    AGF_SD          -0.018      -0.014      -0.012       0.000       0.012       0.015       0.019
+    SIBF_1          -0.010      -0.009      -0.008      -0.002       0.004       0.005       0.008
+    SIBF_3          -0.002       0.000       0.001       0.006       0.011       0.013       0.015
+    HKF             -0.005      -0.002      -0.001       0.004       0.008       0.009       0.011
+    AGEM_SD         -0.022      -0.017      -0.015      -0.004       0.009       0.011       0.014
+    EDUM_SD          0.008       0.012       0.014       0.025       0.034       0.036       0.039
+    SIOPM_SD        -0.022      -0.019      -0.016      -0.006       0.004       0.006       0.010
+    HWM_SD          -0.024      -0.020      -0.018      -0.008       0.001       0.003       0.006
+    DW1M             0.002       0.004       0.005       0.011       0.016       0.018       0.019
+    AGM_SD          -0.232      -0.230      -0.228      -0.218      -0.207      -0.205      -0.203
+
+ SIBM_3   WITH
+    AGEF_SD         -0.152      -0.147      -0.145      -0.133      -0.122      -0.119      -0.115
+    EDUF_SD          0.049       0.054       0.056       0.067       0.079       0.082       0.087
+    SIOPF_SD        -0.019      -0.014      -0.011       0.001       0.013       0.015       0.020
+    HWF_SD          -0.033      -0.029      -0.027      -0.017      -0.007      -0.005      -0.002
+    DW1F             0.009       0.011       0.013       0.018       0.023       0.024       0.026
+    AGF_SD          -0.024      -0.020      -0.018      -0.009       0.004       0.007       0.009
+    SIBF_1           0.001       0.003       0.004       0.009       0.015       0.016       0.017
+    SIBF_3           0.010       0.012       0.013       0.018       0.023       0.025       0.027
+    HKF             -0.020      -0.018      -0.017      -0.012      -0.008      -0.007      -0.006
+    AGEM_SD         -0.154      -0.150      -0.148      -0.137      -0.126      -0.124      -0.119
+    EDUM_SD          0.022       0.026       0.028       0.038       0.048       0.050       0.054
+    SIOPM_SD        -0.001       0.004       0.006       0.016       0.027       0.029       0.033
+    HWM_SD          -0.028      -0.025      -0.023      -0.014      -0.004      -0.002       0.001
+    DW1M             0.023       0.027       0.028       0.033       0.038       0.039       0.042
+    AGM_SD           0.163       0.168       0.170       0.182       0.192       0.195       0.198
+    SIBM_1          -0.119      -0.118      -0.117      -0.112      -0.108      -0.108      -0.106
+
+ HKM      WITH
+    AGEF_SD         -0.053      -0.050      -0.049      -0.041      -0.034      -0.032      -0.030
+    EDUF_SD         -0.213      -0.210      -0.209      -0.201      -0.193      -0.191      -0.188
+    SIOPF_SD        -0.072      -0.067      -0.065      -0.054      -0.046      -0.044      -0.040
+    HWF_SD           0.033       0.035       0.037       0.044       0.051       0.052       0.054
+    DW1F            -0.011      -0.010      -0.009      -0.006      -0.002      -0.001       0.000
+    AGF_SD          -0.022      -0.019      -0.018      -0.010      -0.002      -0.001       0.002
+    SIBF_1          -0.019      -0.017      -0.016      -0.011      -0.006      -0.004      -0.003
+    SIBF_3          -0.015      -0.013      -0.012      -0.007      -0.003      -0.001       0.000
+    AGEM_SD         -0.061      -0.059      -0.058      -0.050      -0.043      -0.041      -0.039
+    EDUM_SD         -0.194      -0.193      -0.191      -0.184      -0.177      -0.176      -0.173
+    SIOPM_SD        -0.119      -0.117      -0.115      -0.106      -0.098      -0.097      -0.094
+    HWM_SD           0.030       0.032       0.033       0.039       0.045       0.046       0.048
+    DW1M             0.003       0.004       0.005       0.009       0.012       0.013       0.014
+    AGM_SD          -0.028      -0.025      -0.024      -0.017      -0.009      -0.008      -0.005
+    SIBM_1          -0.007      -0.005      -0.005       0.000       0.005       0.007       0.008
+    SIBM_3          -0.019      -0.016      -0.015      -0.011      -0.006      -0.005      -0.003
+
+ INTMM1   WITH
+    AGEF_SD         -0.017      -0.012      -0.009       0.007       0.022       0.026       0.032
+    EDUF_SD          0.086       0.090       0.093       0.108       0.125       0.128       0.134
+    SIOPF_SD         0.008       0.015       0.019       0.034       0.047       0.050       0.054
+    HWF_SD          -0.056      -0.051      -0.049      -0.036      -0.024      -0.021      -0.015
+    DW1F            -0.018      -0.016      -0.014      -0.008      -0.001       0.001       0.003
+    AGF_SD          -0.026      -0.020      -0.017      -0.001       0.012       0.015       0.019
+    SIBF_1          -0.006      -0.003      -0.001       0.006       0.013       0.014       0.016
+    SIBF_3           0.001       0.003       0.004       0.011       0.018       0.019       0.021
+    HKF             -0.050      -0.047      -0.046      -0.040      -0.034      -0.033      -0.031
+    AGEM_SD         -0.024      -0.015      -0.013       0.004       0.020       0.022       0.028
+    EDUM_SD          0.060       0.064       0.067       0.080       0.093       0.096       0.100
+    SIOPM_SD         0.038       0.044       0.047       0.061       0.074       0.077       0.083
+    HWM_SD          -0.068      -0.063      -0.060      -0.047      -0.035      -0.033      -0.029
+    DW1M            -0.009      -0.006      -0.004       0.003       0.010       0.011       0.013
+    AGM_SD          -0.029      -0.021      -0.017      -0.004       0.009       0.012       0.016
+    SIBM_1           0.020       0.024       0.026       0.035       0.045       0.047       0.052
+    SIBM_3          -0.026      -0.023      -0.022      -0.017      -0.013      -0.012      -0.009
+    HKM             -0.052      -0.049      -0.048      -0.041      -0.035      -0.034      -0.032
+
+ INTMM3   WITH
+    AGEF_SD         -0.049      -0.045      -0.041      -0.026      -0.010      -0.008      -0.002
+    EDUF_SD          0.077       0.081       0.083       0.098       0.113       0.116       0.121
+    SIOPF_SD         0.004       0.009       0.012       0.027       0.043       0.047       0.050
+    HWF_SD          -0.047      -0.041      -0.039      -0.024      -0.013      -0.010      -0.005
+    DW1F            -0.002       0.002       0.003       0.010       0.017       0.019       0.022
+    AGF_SD          -0.029      -0.024      -0.022      -0.007       0.007       0.009       0.014
+    SIBF_1          -0.002       0.002       0.003       0.011       0.017       0.019       0.021
+    SIBF_3           0.001       0.005       0.007       0.013       0.020       0.021       0.024
+    HKF             -0.046      -0.043      -0.042      -0.035      -0.030      -0.028      -0.026
+    AGEM_SD         -0.052      -0.047      -0.043      -0.028      -0.012      -0.010      -0.005
+    EDUM_SD          0.060       0.066       0.068       0.080       0.093       0.096       0.101
+    SIOPM_SD         0.009       0.017       0.020       0.034       0.049       0.053       0.060
+    HWM_SD          -0.069      -0.065      -0.063      -0.050      -0.038      -0.035      -0.030
+    DW1M            -0.002       0.001       0.003       0.009       0.017       0.018       0.020
+    AGM_SD           0.016       0.021       0.024       0.040       0.058       0.061       0.067
+    SIBM_1          -0.033      -0.031      -0.030      -0.025      -0.020      -0.019      -0.018
+    SIBM_3           0.037       0.040       0.042       0.050       0.061       0.063       0.066
+    HKM             -0.052      -0.050      -0.049      -0.042      -0.035      -0.034      -0.031
+    INTMM1          -0.006      -0.005      -0.005      -0.003      -0.002      -0.002      -0.002
+
+ INTMF1   WITH
+    AGEF_SD         -0.033      -0.029      -0.026      -0.010       0.007       0.009       0.013
+    EDUF_SD          0.085       0.090       0.093       0.109       0.126       0.128       0.133
+    SIOPF_SD        -0.005       0.001       0.003       0.019       0.034       0.039       0.043
+    HWF_SD          -0.046      -0.041      -0.038      -0.024      -0.011      -0.008      -0.004
+    DW1F            -0.006      -0.003      -0.002       0.006       0.013       0.014       0.017
+    AGF_SD          -0.059      -0.055      -0.052      -0.037      -0.024      -0.021      -0.016
+    SIBF_1           0.033       0.037       0.039       0.049       0.058       0.060       0.064
+    SIBF_3          -0.028      -0.026      -0.025      -0.020      -0.016      -0.015      -0.014
+    HKF             -0.047      -0.045      -0.044      -0.038      -0.031      -0.030      -0.027
+    AGEM_SD         -0.036      -0.032      -0.028      -0.012       0.004       0.006       0.011
+    EDUM_SD          0.067       0.072       0.074       0.087       0.100       0.103       0.107
+    SIOPM_SD         0.040       0.044       0.047       0.061       0.075       0.078       0.083
+    HWM_SD          -0.068      -0.062      -0.059      -0.047      -0.034      -0.032      -0.029
+    DW1M            -0.006      -0.003      -0.002       0.006       0.013       0.014       0.016
+    AGM_SD          -0.007      -0.001       0.002       0.017       0.032       0.034       0.037
+    SIBM_1          -0.011      -0.009      -0.007       0.000       0.007       0.008       0.010
+    SIBM_3           0.000       0.003       0.005       0.012       0.019       0.020       0.023
+    HKM             -0.052      -0.049      -0.048      -0.041      -0.034      -0.033      -0.031
+    INTMM1           0.104       0.107       0.108       0.116       0.125       0.128       0.131
+    INTMM3           0.117       0.120       0.122       0.130       0.140       0.141       0.144
+
+ INTMF3   WITH
+    AGEF_SD         -0.025      -0.018      -0.015      -0.003       0.011       0.014       0.018
+    EDUF_SD          0.077       0.081       0.083       0.098       0.111       0.114       0.119
+    SIOPF_SD         0.015       0.022       0.025       0.039       0.054       0.057       0.061
+    HWF_SD          -0.037      -0.034      -0.032      -0.020      -0.009      -0.008      -0.002
+    DW1F            -0.012      -0.010      -0.009      -0.003       0.004       0.005       0.007
+    AGF_SD           0.012       0.018       0.021       0.035       0.051       0.053       0.057
+    SIBF_1          -0.030      -0.028      -0.028      -0.023      -0.018      -0.017      -0.015
+    SIBF_3           0.033       0.037       0.039       0.048       0.057       0.059       0.062
+    HKF             -0.044      -0.043      -0.042      -0.035      -0.030      -0.029      -0.027
+    AGEM_SD         -0.032      -0.024      -0.022      -0.010       0.005       0.008       0.012
+    EDUM_SD          0.046       0.051       0.053       0.064       0.077       0.079       0.084
+    SIOPM_SD         0.017       0.023       0.026       0.039       0.053       0.055       0.059
+    HWM_SD          -0.045      -0.040      -0.037      -0.027      -0.016      -0.013      -0.010
+    DW1M            -0.009      -0.007      -0.005       0.002       0.008       0.009       0.011
+    AGM_SD          -0.010      -0.005      -0.002       0.012       0.023       0.025       0.030
+    SIBM_1          -0.007      -0.005      -0.004       0.003       0.010       0.011       0.014
+    SIBM_3           0.003       0.005       0.006       0.012       0.019       0.020       0.023
+    HKM             -0.043      -0.040      -0.039      -0.033      -0.027      -0.026      -0.024
+    INTMM1           0.087       0.091       0.093       0.101       0.109       0.110       0.113
+    INTMM3           0.101       0.104       0.106       0.114       0.123       0.125       0.129
+    INTMF1          -0.007      -0.006      -0.006      -0.004      -0.003      -0.003      -0.003
+
+ INTFF1   WITH
+    AGEF_SD         -0.037      -0.032      -0.029      -0.015       0.004       0.007       0.010
+    EDUF_SD          0.117       0.121       0.125       0.141       0.157       0.160       0.166
+    SIOPF_SD         0.071       0.077       0.080       0.095       0.111       0.115       0.120
+    HWF_SD          -0.077      -0.073      -0.071      -0.058      -0.045      -0.043      -0.040
+    DW1F            -0.003       0.001       0.003       0.010       0.017       0.018       0.021
+    AGF_SD           0.039       0.042       0.045       0.059       0.070       0.072       0.077
+    SIBF_1          -0.058      -0.055      -0.054      -0.044      -0.035      -0.033      -0.030
+    SIBF_3           0.014       0.015       0.016       0.020       0.024       0.024       0.025
+    HKF             -0.060      -0.057      -0.055      -0.049      -0.043      -0.041      -0.039
+    AGEM_SD         -0.046      -0.040      -0.037      -0.023      -0.006      -0.004       0.001
+    EDUM_SD          0.075       0.078       0.081       0.094       0.108       0.109       0.117
+    SIOPM_SD         0.026       0.031       0.034       0.047       0.063       0.066       0.072
+    HWM_SD          -0.059      -0.054      -0.052      -0.040      -0.026      -0.024      -0.020
+    DW1M             0.001       0.003       0.005       0.012       0.019       0.020       0.022
+    AGM_SD          -0.006      -0.001       0.002       0.016       0.029       0.033       0.036
+    SIBM_1          -0.010      -0.007      -0.006       0.001       0.007       0.009       0.011
+    SIBM_3           0.011       0.013       0.014       0.021       0.028       0.029       0.031
+    HKM             -0.057      -0.056      -0.054      -0.048      -0.041      -0.040      -0.037
+    INTMM1           0.033       0.035       0.037       0.044       0.054       0.055       0.059
+    INTMM3           0.032       0.036       0.037       0.046       0.055       0.057       0.060
+    INTMF1           0.089       0.095       0.097       0.111       0.125       0.129       0.135
+    INTMF3           0.003       0.004       0.004       0.005       0.007       0.007       0.007
+
+ INTFF3   WITH
+    AGEF_SD         -0.007      -0.001       0.002       0.014       0.027       0.029       0.035
+    EDUF_SD          0.077       0.084       0.086       0.099       0.114       0.116       0.121
+    SIOPF_SD         0.073       0.078       0.080       0.093       0.109       0.112       0.114
+    HWF_SD          -0.068      -0.064      -0.061      -0.051      -0.039      -0.036      -0.032
+    DW1F            -0.018      -0.016      -0.014      -0.008      -0.002      -0.001       0.001
+    AGF_SD          -0.064      -0.057      -0.054      -0.040      -0.025      -0.023      -0.018
+    SIBF_1           0.008       0.010       0.011       0.015       0.019       0.020       0.022
+    SIBF_3          -0.044      -0.041      -0.039      -0.030      -0.021      -0.020      -0.016
+    HKF             -0.042      -0.040      -0.039      -0.033      -0.027      -0.026      -0.023
+    AGEM_SD         -0.020      -0.012      -0.009       0.004       0.016       0.019       0.023
+    EDUM_SD          0.046       0.051       0.053       0.064       0.077       0.079       0.082
+    SIOPM_SD         0.038       0.042       0.044       0.057       0.072       0.074       0.080
+    HWM_SD          -0.035      -0.031      -0.029      -0.019      -0.007      -0.006      -0.003
+    DW1M            -0.006      -0.004      -0.002       0.004       0.010       0.011       0.014
+    AGM_SD          -0.018      -0.014      -0.012       0.000       0.011       0.013       0.018
+    SIBM_1          -0.003       0.000       0.002       0.008       0.015       0.016       0.018
+    SIBM_3          -0.013      -0.010      -0.009      -0.003       0.004       0.005       0.007
+    HKM             -0.039      -0.037      -0.036      -0.030      -0.024      -0.023      -0.020
+    INTMM1           0.038       0.041       0.043       0.050       0.058       0.060       0.062
+    INTMM3           0.019       0.022       0.024       0.031       0.040       0.042       0.043
+    INTMF1           0.002       0.002       0.003       0.004       0.005       0.005       0.006
+    INTMF3           0.074       0.078       0.081       0.094       0.107       0.109       0.113
+    INTFF1          -0.004      -0.004      -0.004      -0.002      -0.001      -0.001      -0.001
+
+ INTFM1   WITH
+    AGEF_SD         -0.056      -0.051      -0.048      -0.033      -0.017      -0.014      -0.010
+    EDUF_SD          0.104       0.109       0.113       0.128       0.144       0.147       0.151
+    SIOPF_SD         0.084       0.088       0.091       0.106       0.121       0.123       0.130
+    HWF_SD          -0.075      -0.071      -0.068      -0.057      -0.046      -0.044      -0.039
+    DW1F            -0.009      -0.007      -0.006       0.000       0.007       0.008       0.010
+    AGF_SD          -0.012      -0.007      -0.005       0.010       0.023       0.026       0.031
+    SIBF_1          -0.006      -0.004      -0.002       0.005       0.011       0.013       0.015
+    SIBF_3           0.005       0.007       0.008       0.015       0.022       0.023       0.026
+    HKF             -0.050      -0.048      -0.047      -0.041      -0.035      -0.034      -0.032
+    AGEM_SD         -0.057      -0.052      -0.049      -0.035      -0.018      -0.016      -0.012
+    EDUM_SD          0.060       0.067       0.069       0.082       0.095       0.097       0.103
+    SIOPM_SD         0.039       0.042       0.045       0.058       0.070       0.072       0.078
+    HWM_SD          -0.044      -0.038      -0.036      -0.024      -0.013      -0.011      -0.007
+    DW1M            -0.003       0.000       0.001       0.007       0.014       0.015       0.018
+    AGM_SD           0.058       0.062       0.065       0.078       0.089       0.092       0.095
+    SIBM_1          -0.064      -0.061      -0.059      -0.050      -0.041      -0.040      -0.036
+    SIBM_3           0.019       0.021       0.022       0.026       0.031       0.032       0.033
+    HKM             -0.045      -0.044      -0.042      -0.036      -0.030      -0.029      -0.026
+    INTMM1           0.107       0.110       0.113       0.126       0.139       0.142       0.147
+    INTMM3           0.004       0.005       0.005       0.006       0.008       0.009       0.009
+    INTMF1           0.035       0.038       0.039       0.047       0.056       0.058       0.060
+    INTMF3           0.041       0.044       0.046       0.052       0.061       0.063       0.066
+    INTFF1           0.094       0.097       0.099       0.106       0.115       0.116       0.120
+    INTFF3           0.082       0.084       0.086       0.094       0.101       0.102       0.105
+
+ INTFM3   WITH
+    AGEF_SD          0.003       0.008       0.010       0.025       0.040       0.042       0.047
+    EDUF_SD          0.094       0.100       0.103       0.117       0.132       0.135       0.141
+    SIOPF_SD         0.088       0.093       0.096       0.112       0.128       0.130       0.135
+    HWF_SD          -0.090      -0.088      -0.085      -0.072      -0.061      -0.059      -0.054
+    DW1F            -0.010      -0.007      -0.006       0.002       0.009       0.010       0.012
+    AGF_SD          -0.043      -0.038      -0.035      -0.019      -0.007      -0.005       0.002
+    SIBF_1           0.002       0.004       0.005       0.012       0.019       0.020       0.023
+    SIBF_3          -0.016      -0.013      -0.012      -0.005       0.001       0.002       0.005
+    HKF             -0.053      -0.050      -0.049      -0.042      -0.036      -0.035      -0.032
+    AGEM_SD          0.007       0.012       0.014       0.030       0.044       0.047       0.051
+    EDUM_SD          0.069       0.073       0.075       0.088       0.101       0.103       0.106
+    SIOPM_SD         0.031       0.036       0.038       0.052       0.067       0.069       0.074
+    HWM_SD          -0.049      -0.043      -0.040      -0.029      -0.018      -0.015      -0.012
+    DW1M            -0.004       0.000       0.001       0.008       0.015       0.016       0.020
+    AGM_SD          -0.067      -0.061      -0.058      -0.042      -0.028      -0.025      -0.020
+    SIBM_1           0.006       0.009       0.010       0.015       0.019       0.020       0.022
+    SIBM_3          -0.042      -0.039      -0.038      -0.028      -0.019      -0.017      -0.014
+    HKM             -0.060      -0.059      -0.057      -0.051      -0.044      -0.043      -0.040
+    INTMM1           0.001       0.001       0.002       0.003       0.004       0.004       0.005
+    INTMM3           0.083       0.088       0.091       0.104       0.118       0.121       0.128
+    INTMF1           0.030       0.034       0.035       0.044       0.053       0.054       0.057
+    INTMF3           0.018       0.021       0.023       0.031       0.039       0.041       0.043
+    INTFF1           0.109       0.113       0.114       0.122       0.131       0.132       0.135
+    INTFF3           0.096       0.098       0.100       0.108       0.116       0.118       0.122
+    INTFM1          -0.005      -0.004      -0.004      -0.003      -0.001      -0.001      -0.001
+
+ Means
+    AGEF_SD         -0.137      -0.130      -0.126      -0.110      -0.094      -0.090      -0.083
+    EDUF_SD         -0.151      -0.145      -0.142      -0.125      -0.105      -0.102      -0.097
+    SIOPF_SD        -0.126      -0.120      -0.117      -0.099      -0.079      -0.076      -0.069
+    HWF_SD           0.314       0.320       0.323       0.339       0.356       0.359       0.368
+    DW1F             0.282       0.285       0.286       0.294       0.302       0.303       0.307
+    AGF_SD          -0.016      -0.011      -0.008       0.012       0.029       0.032       0.039
+    SIBF_1           0.340       0.343       0.346       0.358       0.370       0.371       0.375
+    SIBF_3           0.281       0.284       0.286       0.297       0.309       0.311       0.315
+    HKF              0.733       0.738       0.739       0.747       0.754       0.756       0.758
+    AGEM_SD          0.082       0.089       0.093       0.110       0.126       0.128       0.133
+    EDUM_SD          0.104       0.108       0.111       0.125       0.142       0.145       0.151
+    SIOPM_SD         0.075       0.081       0.084       0.099       0.117       0.120       0.127
+    HWM_SD          -0.363      -0.358      -0.355      -0.339      -0.324      -0.321      -0.315
+    DW1M             0.513       0.516       0.518       0.527       0.536       0.538       0.542
+    AGM_SD          -0.038      -0.032      -0.029      -0.012       0.006       0.009       0.016
+    SIBM_1           0.314       0.319       0.321       0.333       0.345       0.346       0.350
+    SIBM_3           0.358       0.363       0.365       0.376       0.388       0.390       0.395
+    HKM              0.714       0.718       0.720       0.727       0.735       0.736       0.739
+    INTMM1           0.027       0.034       0.038       0.051       0.065       0.069       0.074
+    INTMM3           0.061       0.066       0.070       0.084       0.102       0.105       0.110
+    INTMF1           0.051       0.058       0.062       0.077       0.092       0.096       0.100
+    INTMF3           0.045       0.051       0.054       0.068       0.082       0.084       0.088
+    INTFF1          -0.087      -0.079      -0.077      -0.062      -0.047      -0.044      -0.040
+    INTFF3          -0.067      -0.061      -0.059      -0.045      -0.032      -0.029      -0.024
+    INTFM1          -0.089      -0.083      -0.081      -0.068      -0.054      -0.051      -0.047
+    INTFM3          -0.073      -0.067      -0.065      -0.048      -0.033      -0.030      -0.026
+
+ Intercepts
+    OP5F           -23.133      -8.283      -1.578      11.204      22.600      25.028      28.842
+    INCCF_SD        -0.046      -0.033      -0.026       0.010       0.047       0.053       0.067
+    OP5M           -11.846      -7.335      -4.653       5.401       8.198       8.773      13.390
+    INCCM_SD         0.180       0.194       0.199       0.240       0.281       0.286       0.302
+
+ Variances
+    AGEF_SD          0.985       0.994       0.997       1.016       1.037       1.040       1.048
+    EDUF_SD          1.069       1.082       1.086       1.110       1.133       1.140       1.151
+    SIOPF_SD         1.021       1.035       1.041       1.085       1.128       1.138       1.149
+    HWF_SD           0.876       0.887       0.893       0.936       0.982       0.993       1.010
+    DW1F             0.203       0.204       0.204       0.208       0.211       0.211       0.213
+    AGF_SD           0.990       1.006       1.011       1.041       1.073       1.081       1.090
+    SIBF_1           0.224       0.225       0.226       0.230       0.234       0.234       0.236
+    SIBF_3           0.194       0.196       0.197       0.202       0.207       0.208       0.209
+    HKF              0.183       0.185       0.185       0.189       0.193       0.193       0.195
+    AGEM_SD          0.932       0.938       0.942       0.960       0.980       0.984       0.990
+    EDUM_SD          0.824       0.832       0.836       0.858       0.882       0.886       0.893
+    SIOPM_SD         0.856       0.866       0.870       0.895       0.921       0.925       0.936
+    HWM_SD           0.760       0.780       0.787       0.834       0.884       0.895       0.913
+    DW1M             0.248       0.249       0.249       0.249       0.250       0.250       0.250
+    AGM_SD           0.913       0.926       0.932       0.959       0.988       0.992       1.003
+    SIBM_1           0.216       0.218       0.219       0.223       0.228       0.228       0.230
+    SIBM_3           0.219       0.221       0.222       0.225       0.229       0.230       0.231
+    HKM              0.193       0.194       0.195       0.198       0.202       0.202       0.204
+    INTMM1           0.322       0.327       0.329       0.342       0.355       0.356       0.360
+    INTMM3           0.332       0.339       0.340       0.352       0.365       0.368       0.371
+    INTMF1           0.342       0.345       0.346       0.359       0.371       0.374       0.377
+    INTMF3           0.269       0.272       0.275       0.286       0.298       0.300       0.305
+    INTFF1           0.317       0.320       0.323       0.333       0.345       0.347       0.351
+    INTFF3           0.251       0.254       0.257       0.268       0.278       0.281       0.285
+    INTFM1           0.297       0.301       0.304       0.316       0.328       0.330       0.332
+    INTFM3           0.312       0.316       0.319       0.330       0.342       0.345       0.349
+
+ Residual Variances
+    OP5F             0.814       0.823       0.826       0.843       0.868       0.872       0.879
+    INCCF_SD         0.734       0.738       0.740       0.751       0.764       0.766       0.769
+    OP5M             0.833       0.846       0.851       0.877       0.903       0.910       0.919
+    INCCM_SD         0.883       0.888       0.890       0.900       0.911       0.913       0.916
+
+New/Additional Parameters
+    HIW1M            1.000       1.000       1.000       1.000       1.000       1.000       1.000
+    MEDW1M           0.000       0.000       0.000       0.000       0.000       0.000       0.000
+    LOW1M            0.000       0.000       0.000       0.000       0.000       0.000       0.000
+    HIW3M            1.000       1.000       1.000       1.000       1.000       1.000       1.000
+    MEDW3M           0.000       0.000       0.000       0.000       0.000       0.000       0.000
+    LOW3M            0.000       0.000       0.000       0.000       0.000       0.000       0.000
+    HIW1F            1.000       1.000       1.000       1.000       1.000       1.000       1.000
+    MEDW1F           0.000       0.000       0.000       0.000       0.000       0.000       0.000
+    LOW1F            0.000       0.000       0.000       0.000       0.000       0.000       0.000
+    HIW3F            1.000       1.000       1.000       1.000       1.000       1.000       1.000
+    MEDW3F           0.000       0.000       0.000       0.000       0.000       0.000       0.000
+    LOW3F            0.000       0.000       0.000       0.000       0.000       0.000       0.000
+    HI0AAM1         -0.005      -0.003      -0.003      -0.001       0.002       0.002       0.003
+    MED0AAM1        -0.004      -0.003      -0.003      -0.001       0.002       0.002       0.003
+    LO0AAM1         -0.003      -0.002      -0.001       0.000       0.000       0.001       0.001
+    IM0AAM11        -0.002      -0.001      -0.001       0.000       0.001       0.001       0.001
+    IM0AAM12         0.000       0.000       0.000       0.000       0.000       0.000       0.000
+    IM0AAM13        -0.002      -0.001      -0.001       0.000       0.002       0.003       0.004
+    HI0PAM1         -0.015      -0.012      -0.010       0.001       0.011       0.013       0.015
+    MED0PAM1        -0.007      -0.005      -0.004       0.000       0.005       0.006       0.008
+    LO0PAM1         -0.016      -0.013      -0.012      -0.003       0.005       0.006       0.010
+    IM0PAM11        -0.017      -0.014      -0.011       0.001       0.011       0.013       0.017
+    IM0PAM12         0.000       0.000       0.000       0.000       0.000       0.000       0.000
+    IM0PAM13        -0.019      -0.015      -0.013      -0.003       0.006       0.007       0.009
+    HI0AAM2         -0.027      -0.024      -0.022      -0.014      -0.007      -0.006      -0.003
+    MED0AAM2        -0.022      -0.020      -0.019      -0.015      -0.010      -0.010      -0.008
+    LO0AAM2         -0.044      -0.040      -0.039      -0.030      -0.022      -0.020      -0.016
+    IM0AAM21        -0.013      -0.010      -0.008       0.000       0.009       0.010       0.013
+    IM0AAM22         0.000       0.000       0.000       0.000       0.000       0.000       0.000
+    IM0AAM23        -0.030      -0.027      -0.024      -0.015      -0.006      -0.004      -0.002
+    HI0PAM2         -0.001       0.000       0.000       0.000       0.001       0.001       0.001
+    MED0PAM2        -0.001      -0.001       0.000       0.000       0.000       0.000       0.000
+    LO0PAM2         -0.001      -0.001       0.000       0.000       0.002       0.002       0.003
+    IM0PAM21        -0.001      -0.001       0.000       0.000       0.001       0.001       0.002
+    IM0PAM22         0.000       0.000       0.000       0.000       0.000       0.000       0.000
+    IM0PAM23        -0.001      -0.001       0.000       0.000       0.002       0.002       0.003
+    TIE0AAM1        -0.004      -0.003      -0.003       0.000       0.001       0.001       0.002
+    TIE0PAM1        -0.016      -0.011      -0.008       0.004       0.016       0.020       0.024
+    TIE0AAM2        -0.002       0.003       0.005       0.016       0.026       0.028       0.031
+    TIE0PAM2        -0.004      -0.003      -0.002       0.000       0.000       0.001       0.001
+    HI1AAM1         -0.003      -0.002      -0.002       0.000       0.002       0.002       0.003
+    MED1AAM1        -0.003      -0.002      -0.002       0.000       0.002       0.002       0.003
+    LO1AAM1         -0.001      -0.001      -0.001       0.000       0.001       0.001       0.001
+    IM1AAM11        -0.001      -0.001      -0.001       0.000       0.000       0.001       0.001
+    IM1AAM12         0.000       0.000       0.000       0.000       0.000       0.000       0.000
+    IM1AAM13        -0.003      -0.002      -0.001       0.000       0.001       0.002       0.003
+    HI1PAM1         -0.002      -0.002      -0.001       0.000       0.000       0.001       0.001
+    MED1PAM1        -0.001       0.000       0.000       0.000       0.000       0.000       0.001
+    LO1PAM1         -0.001       0.000       0.000       0.000       0.001       0.002       0.002
+    IM1PAM11        -0.002      -0.001      -0.001       0.000       0.001       0.001       0.001
+    IM1PAM12         0.000       0.000       0.000       0.000       0.000       0.000       0.000
+    IM1PAM13        -0.001       0.000       0.000       0.000       0.002       0.002       0.003
+    HI1AAM2         -0.002      -0.001      -0.001       0.001       0.002       0.003       0.004
+    MED1AAM2        -0.002      -0.001      -0.001       0.001       0.002       0.002       0.003
+    LO1AAM2         -0.003      -0.002      -0.001       0.001       0.004       0.005       0.006
+    IM1AAM21        -0.001      -0.001      -0.001       0.000       0.000       0.001       0.001
+    IM1AAM22         0.000       0.000       0.000       0.000       0.000       0.000       0.000
+    IM1AAM23        -0.002      -0.001      -0.001       0.001       0.003       0.003       0.004
+    HI1PAM2         -0.001      -0.001       0.000       0.000       0.000       0.000       0.001
+    MED1PAM2         0.000       0.000       0.000       0.000       0.000       0.000       0.000
+    LO1PAM2         -0.002      -0.001      -0.001       0.000       0.001       0.001       0.002
+    IM1PAM21        -0.001      -0.001       0.000       0.000       0.000       0.001       0.001
+    IM1PAM22         0.000       0.000       0.000       0.000       0.000       0.000       0.000
+    IM1PAM23        -0.002      -0.001      -0.001       0.000       0.001       0.001       0.002
+    TIE1AAM1        -0.003      -0.002      -0.001       0.000       0.002       0.002       0.003
+    TIE1PAM1        -0.004      -0.003      -0.002       0.000       0.000       0.000       0.001
+    TIE1AAM2        -0.005      -0.003      -0.003      -0.001       0.000       0.001       0.001
+    TIE1PAM2        -0.002      -0.001      -0.001       0.000       0.001       0.001       0.002
+
+
+DIAGRAM INFORMATION
+
+  Use View Diagram under the Diagram menu in the Mplus Editor to view the diagram.
+  If running Mplus from the Mplus Diagrammer, the diagram opens automatically.
+
+  Diagram output
+    c:\users\lzhs\desktop\markdown_latex\rmarkdown\bookdown\test_bookdown_new\20230927 lta\interge_rela\result_mod_apime
+
+     Beginning Time:  14:41:50
+        Ending Time:  14:47:17
+       Elapsed Time:  00:05:27
+
+
+
+MUTHEN & MUTHEN
+3463 Stoner Ave.
+Los Angeles, CA  90066
+
+Tel: (310) 391-9971
+Fax: (310) 391-8971
+Web: www.StatModel.com
+Support: Support@StatModel.com
+
+Copyright (c) 1998-2024 Muthen & Muthen
